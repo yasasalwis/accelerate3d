@@ -1,0 +1,116 @@
+datasource db {
+  provider = "sqlite"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String   @id @default(uuid())
+  username     String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+
+  // Relations
+  printers      UserPrinter[]
+  notifications Notification[]
+}
+
+model Notification {
+  id      String  @id @default(uuid())
+  userId  String
+  title   String
+  message String
+  type    String  @default("INFO") // INFO, WARNING, SUCCESS, ERROR
+  read    Boolean @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+}
+
+model UserPrinter {
+  id                 String     @id @default(uuid())
+  name               String
+  ipAddress          String     @unique
+  apiKey             String?
+  status             String     @default("IDLE") // IDLE, PRINTING, ERROR, OFFLINE
+  type               String     @default("FDM") // FDM, SLA
+  isAutoEjectCapable Boolean    @default(false)
+  currentJobId       String?
+  jobs               PrintJob[]
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+
+  // Parent Printer definition (Market Printer)
+  printerId String
+  printer   Printer @relation(fields: [printerId], references: [id])
+
+  // Owner
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, printerId])
+}
+
+model Printer {
+  id                   String  @id @default(uuid())
+  make                 String
+  model                String
+  buildVolumeX         Float
+  buildVolumeY         Float
+  buildVolumeZ         Float
+  technology           String // FDM, SLA
+  maxPowerConsumptionW Int?
+  priceUsd             Float?
+  imageUrl             String?
+  sourceUrl            String?
+  features             String? // JSON string of features
+
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  userPrinters UserPrinter[]
+
+  @@unique([make, model])
+}
+
+model Model {
+  id        String  @id @default(uuid())
+  name      String
+  filePath  String // Path to the source file (STL/OBJ/etc.)
+  gcodePath String? // Path to the sliced G-code
+
+  // Dimensions for auto-scheduling
+  widthMm  Float @default(0.0)
+  depthMm  Float @default(0.0)
+  heightMm Float @default(0.0)
+
+  estimatedTime Int        @default(0) // in seconds
+  filamentGrams Float      @default(0.0)
+  thumbnailUrl  String?
+  jobs          PrintJob[]
+  createdAt     DateTime   @default(now())
+}
+
+model PrintJob {
+  id                 String    @id @default(uuid())
+  userPrinterId      String
+  modelId            String
+  status             String    @default("PENDING") // PENDING, PRINTING, COMPLETED, FAILED
+  startTime          DateTime?
+  endTime            DateTime?
+  autoEjectTriggered Boolean   @default(false)
+
+  userPrinter UserPrinter @relation(fields: [userPrinterId], references: [id], onDelete: Cascade)
+  model       Model       @relation(fields: [modelId], references: [id])
+  createdAt   DateTime    @default(now())
+}
+
+model MaterialStats {
+  id                String @id @default(uuid())
+  type              String // PLA, PETG, ASA
+  costPerGram       Float
+  color             String
+  currentStockGrams Float
+}

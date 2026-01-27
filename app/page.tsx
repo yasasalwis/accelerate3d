@@ -1,65 +1,137 @@
-import Image from "next/image";
+import { db } from "@/lib/db"
+import DashboardClient, { FleetData, MetricStat, PrinterData } from "@/components/dashboard/dashboard-client"
 
-export default function Home() {
+export default async function Dashboard() {
+  // 1. Fetch Printers
+  const printers = await db.userPrinter.findMany({
+    orderBy: { createdAt: 'desc' },
+    include: {
+      jobs: {
+        where: { status: 'PRINTING' },
+        take: 1,
+        include: { model: true }
+      }
+    }
+  })
+
+  // 2. Map Printers to Dashboard Data
+  const printerData: PrinterData[] = printers.map(p => {
+    const activeJob = p.jobs[0]
+    const isPrinting = p.status === 'PRINTING'
+
+    let progress = undefined
+    let timeLeft = undefined
+
+    if (isPrinting && activeJob && activeJob.startTime) {
+      const now = new Date()
+      const elapsedMs = now.getTime() - activeJob.startTime.getTime()
+      const elapsedSeconds = elapsedMs / 1000
+      const estimatedTotal = activeJob.model.estimatedTime || 1
+
+      // Calculate progress percentage
+      progress = Math.min(Math.round((elapsedSeconds / estimatedTotal) * 100), 99)
+
+      // Calculate time left string
+      const remainingSeconds = Math.max(estimatedTotal - elapsedSeconds, 0)
+      const h = Math.floor(remainingSeconds / 3600)
+      const m = Math.floor((remainingSeconds % 3600) / 60)
+
+      if (h > 0) {
+        timeLeft = `${h}h ${m}m`
+      } else if (m > 0) {
+        timeLeft = `${m}m`
+      } else {
+        timeLeft = "< 1m"
+      }
+    }
+
+    return {
+      id: p.id,
+      name: p.name,
+      status: p.status as any,
+      progress,
+      timeLeft,
+      temps: isPrinting ? { nozzle: 245, bed: 100 } : undefined, // Currently hardcoded; needs a Telemetry table
+      file: activeJob?.model.name || undefined
+    }
+  })
+
+  // 3. Calculate Fleet Status Counts
+  const activeCount = printers.filter(p => p.status === 'PRINTING').length
+  const idleCount = printers.filter(p => p.status === 'IDLE').length
+  const errorCount = printers.filter(p => p.status === 'ERROR').length
+  const offlineCount = printers.filter(p => p.status === 'OFFLINE').length
+  const totalPrinters = printers.length
+
+  const fleetData: FleetData[] = [
+    { name: 'Active', value: activeCount, color: '#CCFF00' }, // Cyber Lime
+    { name: 'Idle', value: idleCount, color: '#00FFFF' }, // Neon Cyan
+    { name: 'Error', value: errorCount, color: '#FF0033' }, // Neon Red
+    { name: 'Offline', value: offlineCount, color: '#1e293b' }, // Slate-800
+  ]
+
+  const activePercentage = totalPrinters > 0 ? Math.round((activeCount / totalPrinters) * 100) : 0
+
+  // 4. Calculate Aggregate Stats (Print Hours, Filament, Cost) based on History
+  // Fetch completed jobs
+  const completedJobs = await db.printJob.findMany({
+    where: { status: 'COMPLETED' },
+    include: { model: true }
+  })
+
+  let totalPrintHours = 0
+  let totalFilamentGrams = 0
+
+  completedJobs.forEach(job => {
+    // Use stored job time if available, or estimated time from model
+    if (job.startTime && job.endTime) {
+      const durationMs = job.endTime.getTime() - job.startTime.getTime()
+      totalPrintHours += durationMs / (1000 * 60 * 60)
+    } else {
+      totalPrintHours += (job.model.estimatedTime || 0) / 3600 // estimatedTime in seconds
+    }
+
+    totalFilamentGrams += job.model.filamentGrams || 0
+  })
+
+  // Estimate Cost: $20/kg -> $0.02/gram. Add power cost estimate e.g. 0.1 kW * hours * $0.15/kWh
+  const materialCost = totalFilamentGrams * 0.025 // slightly markup
+  const powerCost = totalPrintHours * 0.15 * 0.15 // rough estimate
+  const totalCost = materialCost + powerCost
+
+  const stats: MetricStat[] = [
+    {
+      title: "Print Hours",
+      value: `${Math.round(totalPrintHours)}h`,
+      icon: "Activity",
+      change: "Lifetime",
+      sub: "Total Runtime",
+      color: "neon-cyan"
+    },
+    {
+      title: "Filament Used",
+      value: `${(totalFilamentGrams / 1000).toFixed(1)} kg`,
+      icon: "Layers",
+      change: "Lifetime",
+      sub: "Material Usage",
+      color: "neon-lime"
+    },
+    {
+      title: "Est. Cost",
+      value: `$${totalCost.toFixed(2)}`,
+      icon: "Zap",
+      change: "Lifetime",
+      sub: "Power + Material",
+      color: "neon-red"
+    },
+  ]
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
-  );
+    <DashboardClient
+      printers={printerData}
+      stats={stats}
+      fleetData={fleetData}
+      activePercentage={activePercentage}
+    />
+  )
 }
