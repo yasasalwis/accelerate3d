@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
-import { Plus, Trash2 } from "lucide-react"
-import { createMarketPrinter, deleteMarketPrinter } from "@/lib/admin-actions"
+import {useState} from "react"
+import {Plus, Trash2} from "lucide-react"
+import {createMarketPrinter, deleteMarketPrinter} from "@/lib/admin-actions"
 
 interface Manufacturer {
     id: string
@@ -39,7 +39,7 @@ interface PrinterFormProps {
     onRefresh: () => void
 }
 
-export function PrinterForm({ manufacturers, technologies, features, printers, onRefresh }: PrinterFormProps) {
+export function PrinterForm({manufacturers, technologies, features, printers, onRefresh}: PrinterFormProps) {
     const [model, setModel] = useState("")
     const [manufacturerId, setManufacturerId] = useState("")
     const [technologyId, setTechnologyId] = useState("")
@@ -277,7 +277,7 @@ export function PrinterForm({ manufacturers, technologies, features, printers, o
                     disabled={loading}
                     className="flex items-center gap-2 px-4 py-2 bg-neon-red hover:bg-neon-red/80 disabled:opacity-50 rounded-lg font-medium transition-colors cursor-pointer"
                 >
-                    <Plus className="w-4 h-4" />
+                    <Plus className="w-4 h-4"/>
                     {loading ? "Creating..." : "Create Printer"}
                 </button>
             </form>
@@ -299,7 +299,8 @@ export function PrinterForm({ manufacturers, technologies, features, printers, o
                                         {printer.manufacturer.name} {printer.model}
                                     </p>
                                     <p className="text-sm text-muted-foreground">
-                                        {printer.technology.name} • Build Volume: {printer.buildVolumeX}×{printer.buildVolumeY}×{printer.buildVolumeZ}mm
+                                        {printer.technology.name} • Build
+                                        Volume: {printer.buildVolumeX}×{printer.buildVolumeY}×{printer.buildVolumeZ}mm
                                         {printer.priceUsd && ` • $${printer.priceUsd.toFixed(2)}`}
                                     </p>
                                     {printer.features.length > 0 && (
@@ -313,7 +314,7 @@ export function PrinterForm({ manufacturers, technologies, features, printers, o
                                     className="p-2 hover:bg-red-500/10 rounded-lg transition-colors cursor-pointer"
                                     title="Delete"
                                 >
-                                    <Trash2 className="w-4 h-4 text-red-500" />
+                                    <Trash2 className="w-4 h-4 text-red-500"/>
                                 </button>
                             </div>
                         ))

@@ -1,17 +1,32 @@
 "use client"
 
 import * as React from "react"
-import { ModelCard } from "@/components/ui/model-card"
-import { Plus, Upload, Loader2, FileCode } from "lucide-react"
-import { UploadModelModal } from "@/components/models/upload-model-modal"
-import { QueueModelModal } from "@/components/models/queue-model-modal"
-import { Button } from "@/components/ui/button"
+import {ModelCard} from "@/components/ui/model-card"
+import {FileCode, Loader2, Plus, Upload} from "lucide-react"
+import {UploadModelModal} from "@/components/models/upload-model-modal"
+import {QueueModelModal} from "@/components/models/queue-model-modal"
+
+interface Model {
+    id: string
+    name: string
+    thumbnailUrl?: string | null
+    widthMm: number
+    depthMm: number
+    heightMm: number
+    estimatedTime: number
+    filamentGrams: number
+    material?: string | null
+}
 
 export default function ModelsPage() {
-    const [models, setModels] = React.useState<any[]>([])
+    const [models, setModels] = React.useState<Model[]>([])
     const [isLoading, setIsLoading] = React.useState(true)
     const [isUploadModalOpen, setIsUploadModalOpen] = React.useState(false)
-    const [queueModal, setQueueModal] = React.useState<{ isOpen: boolean, modelId: string | null, modelName: string | null }>({
+    const [queueModal, setQueueModal] = React.useState<{
+        isOpen: boolean,
+        modelId: string | null,
+        modelName: string | null
+    }>({
         isOpen: false,
         modelId: null,
         modelName: null
@@ -40,7 +55,8 @@ export default function ModelsPage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tighter uppercase font-rajdhani text-white">3D Models</h1>
+                    <h1 className="text-3xl font-bold tracking-tighter uppercase font-rajdhani text-white">3D
+                        Models</h1>
                     <p className="text-sm text-zinc-500 font-mono">Project source files and scanned assets.</p>
                 </div>
                 <div className="flex gap-3">
@@ -48,14 +64,14 @@ export default function ModelsPage() {
                         onClick={() => setIsUploadModalOpen(true)}
                         className="flex items-center gap-2 px-4 py-2 border border-white/10 rounded-lg text-sm font-medium hover:bg-white/5 transition-all font-rajdhani uppercase tracking-wider"
                     >
-                        <FileCode className="size-4" />
+                        <FileCode className="size-4"/>
                         Import G-CODE
                     </button>
                     <button
                         onClick={() => setIsUploadModalOpen(true)}
                         className="flex items-center gap-2 px-4 py-2 bg-neon-red text-white rounded-lg text-sm font-bold hover:glow-red transition-all font-rajdhani uppercase tracking-wider"
                     >
-                        <Plus className="size-4" />
+                        <Plus className="size-4"/>
                         New Project
                     </button>
                 </div>
@@ -63,13 +79,14 @@ export default function ModelsPage() {
 
             {isLoading ? (
                 <div className="flex flex-col items-center justify-center h-[60vh]">
-                    <Loader2 className="size-12 text-neon-red animate-spin mb-4" />
+                    <Loader2 className="size-12 text-neon-red animate-spin mb-4"/>
                     <p className="text-zinc-500 font-mono text-sm uppercase">Synchronizing Library...</p>
                 </div>
             ) : models.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-[60vh] rounded-2xl border border-dashed border-white/10 bg-zinc-900/20">
+                <div
+                    className="flex flex-col items-center justify-center h-[60vh] rounded-2xl border border-dashed border-white/10 bg-zinc-900/20">
                     <div className="size-16 rounded-full bg-zinc-800/50 flex items-center justify-center mb-4">
-                        <Upload className="size-8 text-zinc-600" />
+                        <Upload className="size-8 text-zinc-600"/>
                     </div>
                     <h3 className="text-xl font-bold font-rajdhani uppercase text-zinc-400">No Models Found</h3>
                     <p className="text-sm text-zinc-500 font-mono mt-1">Upload your first 3D model to get started.</p>
@@ -107,7 +124,7 @@ export default function ModelsPage() {
 
             <QueueModelModal
                 isOpen={queueModal.isOpen}
-                onClose={() => setQueueModal({ ...queueModal, isOpen: false })}
+                onClose={() => setQueueModal({...queueModal, isOpen: false})}
                 modelId={queueModal.modelId}
                 modelName={queueModal.modelName}
             />

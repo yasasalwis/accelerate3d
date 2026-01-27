@@ -1,16 +1,16 @@
 "use client"
 
-import { Notification } from "@/types/notification"
-import { cn } from "@/lib/utils"
-import { formatDistanceToNow } from "date-fns"
-import { Bell, AlertTriangle, CheckCircle, Info, XCircle } from "lucide-react"
+import {Notification} from "@/types/notification"
+import {cn} from "@/lib/utils"
+import {formatDistanceToNow} from "date-fns"
+import {AlertTriangle, Bell, CheckCircle, Info, XCircle} from "lucide-react"
 
 interface NotificationItemProps {
     notification: Notification
     onRead: (id: string) => void
 }
 
-export function NotificationItem({ notification, onRead }: NotificationItemProps) {
+export function NotificationItem({notification, onRead}: NotificationItemProps) {
     const Icon = {
         INFO: Info,
         WARNING: AlertTriangle,
@@ -35,7 +35,7 @@ export function NotificationItem({ notification, onRead }: NotificationItemProps
         >
             <div className="flex gap-3">
                 <div className={cn("mt-1 shrink-0", typeColors[notification.type])}>
-                    <Icon className="size-4" />
+                    <Icon className="size-4"/>
                 </div>
                 <div className="flex-1 space-y-1">
                     <div className="flex justify-between items-start">
@@ -46,14 +46,14 @@ export function NotificationItem({ notification, onRead }: NotificationItemProps
                             {notification.title}
                         </p>
                         {!notification.read && (
-                            <div className="size-2 rounded-full bg-neon-red shadow-[0_0_8px_var(--neon-red)] mt-1.5" />
+                            <div className="size-2 rounded-full bg-neon-red shadow-[0_0_8px_var(--neon-red)] mt-1.5"/>
                         )}
                     </div>
                     <p className="text-xs text-zinc-500 leading-relaxed">
                         {notification.message}
                     </p>
                     <p className="text-[10px] text-zinc-600 font-mono uppercase tracking-wider">
-                        {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
+                        {formatDistanceToNow(new Date(notification.createdAt), {addSuffix: true})}
                     </p>
                 </div>
             </div>

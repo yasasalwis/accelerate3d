@@ -1,9 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { Upload, X, Loader2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
+import {Loader2, Upload, X} from "lucide-react"
+import {Button} from "@/components/ui/button"
 
 interface UploadModelModalProps {
     isOpen: boolean
@@ -11,7 +10,7 @@ interface UploadModelModalProps {
     onSuccess: () => void
 }
 
-export function UploadModelModal({ isOpen, onClose, onSuccess }: UploadModelModalProps) {
+export function UploadModelModal({isOpen, onClose, onSuccess}: UploadModelModalProps) {
     const [isUploading, setIsUploading] = React.useState(false)
     const [file, setFile] = React.useState<File | null>(null)
     const [formData, setFormData] = React.useState({
@@ -28,7 +27,7 @@ export function UploadModelModal({ isOpen, onClose, onSuccess }: UploadModelModa
             const selectedFile = e.target.files[0]
             setFile(selectedFile)
             if (!formData.name) {
-                setFormData(prev => ({ ...prev, name: selectedFile.name.replace(/\.[^/.]+$/, "") }))
+                setFormData(prev => ({...prev, name: selectedFile.name.replace(/\.[^/.]+$/, "")}))
             }
         }
     }
@@ -82,23 +81,26 @@ export function UploadModelModal({ isOpen, onClose, onSuccess }: UploadModelModa
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-            <div className="relative w-full max-w-lg bg-zinc-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div
+                className="relative w-full max-w-lg bg-zinc-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
                 <div className="p-6 border-b border-white/5 flex items-center justify-between">
                     <div>
-                        <h2 className="text-xl font-bold font-rajdhani uppercase tracking-tight text-white">Upload G-CODE</h2>
+                        <h2 className="text-xl font-bold font-rajdhani uppercase tracking-tight text-white">Upload
+                            G-CODE</h2>
                         <p className="text-xs text-zinc-500 font-mono">Add a new G-code file to your library.</p>
                     </div>
                     <button
                         onClick={onClose}
                         className="p-2 hover:bg-white/5 rounded-full transition-colors text-zinc-400 hover:text-white"
                     >
-                        <X className="size-5" />
+                        <X className="size-5"/>
                     </button>
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-6 space-y-6">
                     <div className="space-y-4">
-                        <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-white/10 rounded-xl bg-white/5 hover:bg-white/10 transition-all cursor-pointer relative">
+                        <div
+                            className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-white/10 rounded-xl bg-white/5 hover:bg-white/10 transition-all cursor-pointer relative">
                             <input
                                 type="file"
                                 className="absolute inset-0 opacity-0 cursor-pointer"
@@ -107,7 +109,7 @@ export function UploadModelModal({ isOpen, onClose, onSuccess }: UploadModelModa
                                 required
                             />
                             <div className="size-12 rounded-full bg-zinc-800 flex items-center justify-center mb-3">
-                                <Upload className="size-6 text-zinc-400" />
+                                <Upload className="size-6 text-zinc-400"/>
                             </div>
                             <p className="text-sm font-medium text-white">
                                 {file ? file.name : "Click to select or drag & drop"}
@@ -120,7 +122,7 @@ export function UploadModelModal({ isOpen, onClose, onSuccess }: UploadModelModa
                             <input
                                 type="text"
                                 value={formData.name}
-                                onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))}
+                                onChange={(e) => setFormData(p => ({...p, name: e.target.value}))}
                                 placeholder="Display Name"
                                 className="w-full bg-zinc-950 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-neon-red/50 transition-all"
                                 required
@@ -133,7 +135,7 @@ export function UploadModelModal({ isOpen, onClose, onSuccess }: UploadModelModa
                                 <input
                                     type="number"
                                     value={formData.width}
-                                    onChange={(e) => setFormData(p => ({ ...p, width: e.target.value }))}
+                                    onChange={(e) => setFormData(p => ({...p, width: e.target.value}))}
                                     className="w-full bg-zinc-950 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-neon-red/50 transition-all"
                                     placeholder="0"
                                 />
@@ -143,7 +145,7 @@ export function UploadModelModal({ isOpen, onClose, onSuccess }: UploadModelModa
                                 <input
                                     type="number"
                                     value={formData.depth}
-                                    onChange={(e) => setFormData(p => ({ ...p, depth: e.target.value }))}
+                                    onChange={(e) => setFormData(p => ({...p, depth: e.target.value}))}
                                     className="w-full bg-zinc-950 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-neon-red/50 transition-all"
                                     placeholder="0"
                                 />
@@ -153,7 +155,7 @@ export function UploadModelModal({ isOpen, onClose, onSuccess }: UploadModelModa
                                 <input
                                     type="number"
                                     value={formData.height}
-                                    onChange={(e) => setFormData(p => ({ ...p, height: e.target.value }))}
+                                    onChange={(e) => setFormData(p => ({...p, height: e.target.value}))}
                                     className="w-full bg-zinc-950 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-neon-red/50 transition-all"
                                     placeholder="0"
                                 />
@@ -166,7 +168,7 @@ export function UploadModelModal({ isOpen, onClose, onSuccess }: UploadModelModa
                                 <input
                                     type="number"
                                     value={formData.estimatedTime}
-                                    onChange={(e) => setFormData(p => ({ ...p, estimatedTime: e.target.value }))}
+                                    onChange={(e) => setFormData(p => ({...p, estimatedTime: e.target.value}))}
                                     className="w-full bg-zinc-950 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-neon-red/50 transition-all"
                                     placeholder="3600"
                                 />
@@ -176,7 +178,7 @@ export function UploadModelModal({ isOpen, onClose, onSuccess }: UploadModelModa
                                 <input
                                     type="number"
                                     value={formData.filamentGrams}
-                                    onChange={(e) => setFormData(p => ({ ...p, filamentGrams: e.target.value }))}
+                                    onChange={(e) => setFormData(p => ({...p, filamentGrams: e.target.value}))}
                                     className="w-full bg-zinc-950 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-neon-red/50 transition-all"
                                     placeholder="150"
                                 />
@@ -200,9 +202,9 @@ export function UploadModelModal({ isOpen, onClose, onSuccess }: UploadModelModa
                             disabled={!file || isUploading}
                         >
                             {isUploading ? (
-                                <Loader2 className="size-4 animate-spin mr-2" />
+                                <Loader2 className="size-4 animate-spin mr-2"/>
                             ) : (
-                                <Upload className="size-4 mr-2" />
+                                <Upload className="size-4 mr-2"/>
                             )}
                             {isUploading ? "Uploading..." : "Start Upload"}
                         </Button>

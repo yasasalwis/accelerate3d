@@ -1,4 +1,4 @@
-import { db } from "@/lib/db"
+import {db} from "@/lib/db"
 import QueueClient from "@/components/queue/queue-client"
 
 export default async function QueuePage() {
@@ -7,11 +7,15 @@ export default async function QueuePage() {
             model: true,
             userPrinter: true
         },
-        orderBy: { createdAt: 'desc' }
+        orderBy: {createdAt: 'desc'}
     })
 
     const jobs = dbJobs.map(job => ({
         ...job,
+        model: {
+            ...job.model,
+            thumbnailUrl: job.model.thumbnailUrl || undefined
+        },
         printer: {
             name: job.userPrinter.name
         }
@@ -21,7 +25,7 @@ export default async function QueuePage() {
 
     return (
         <div className="space-y-6">
-            <QueueClient initialJobs={jobs as any} models={models as any} />
+            <QueueClient initialJobs={jobs} models={models}/>
         </div>
     )
 }

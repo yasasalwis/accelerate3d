@@ -42,8 +42,6 @@ model UserPrinter {
   jobs               PrintJob[]
   user               User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   printer            Printer    @relation(fields: [printerId], references: [id])
-
-  @@unique([userId, printerId])
 }
 
 model Manufacturer {

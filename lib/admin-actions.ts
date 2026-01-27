@@ -1,7 +1,7 @@
 "use server"
 
-import { db } from "./db"
-import { revalidatePath } from "next/cache"
+import {db} from "./db"
+import {revalidatePath} from "next/cache"
 
 // ============================================
 // MANUFACTURER ACTIONS
@@ -21,12 +21,12 @@ export async function createManufacturer(data: {
 
 export async function getManufacturers() {
     return db.manufacturer.findMany({
-        orderBy: { name: "asc" }
+        orderBy: {name: "asc"}
     })
 }
 
 export async function deleteManufacturer(id: string) {
-    await db.manufacturer.delete({ where: { id } })
+    await db.manufacturer.delete({where: {id}})
     revalidatePath("/admin")
 }
 
@@ -47,12 +47,12 @@ export async function createTechnology(data: {
 
 export async function getTechnologies() {
     return db.printerTechnology.findMany({
-        orderBy: { name: "asc" }
+        orderBy: {name: "asc"}
     })
 }
 
 export async function deleteTechnology(id: string) {
-    await db.printerTechnology.delete({ where: { id } })
+    await db.printerTechnology.delete({where: {id}})
     revalidatePath("/admin")
 }
 
@@ -73,12 +73,12 @@ export async function createFeature(data: {
 
 export async function getFeatures() {
     return db.printerFeature.findMany({
-        orderBy: { name: "asc" }
+        orderBy: {name: "asc"}
     })
 }
 
 export async function deleteFeature(id: string) {
-    await db.printerFeature.delete({ where: { id } })
+    await db.printerFeature.delete({where: {id}})
     revalidatePath("/admin")
 }
 
@@ -99,7 +99,7 @@ export async function createMarketPrinter(data: {
     sourceUrl?: string
     featureIds: string[]
 }) {
-    const { featureIds, ...printerData } = data
+    const {featureIds, ...printerData} = data
 
     const printer = await db.printer.create({
         data: {
@@ -138,14 +138,14 @@ export async function getMarketPrinters() {
             }
         },
         orderBy: [
-            { manufacturer: { name: "asc" } },
-            { model: "asc" }
+            {manufacturer: {name: "asc"}},
+            {model: "asc"}
         ]
     })
 }
 
 export async function deleteMarketPrinter(id: string) {
-    await db.printer.delete({ where: { id } })
+    await db.printer.delete({where: {id}})
     revalidatePath("/admin")
     revalidatePath("/printers")
 }

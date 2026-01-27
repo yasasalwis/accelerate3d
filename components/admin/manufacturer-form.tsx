@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
-import { Plus, Trash2 } from "lucide-react"
-import { createManufacturer, deleteManufacturer } from "@/lib/admin-actions"
+import {useState} from "react"
+import {Plus, Trash2} from "lucide-react"
+import {createManufacturer, deleteManufacturer} from "@/lib/admin-actions"
 
 interface Manufacturer {
     id: string
@@ -16,7 +16,7 @@ interface ManufacturerFormProps {
     onRefresh: () => void
 }
 
-export function ManufacturerForm({ manufacturers, onRefresh }: ManufacturerFormProps) {
+export function ManufacturerForm({manufacturers, onRefresh}: ManufacturerFormProps) {
     const [name, setName] = useState("")
     const [country, setCountry] = useState("")
     const [website, setWebsite] = useState("")
@@ -101,7 +101,7 @@ export function ManufacturerForm({ manufacturers, onRefresh }: ManufacturerFormP
                     disabled={loading}
                     className="flex items-center gap-2 px-4 py-2 bg-neon-red hover:bg-neon-red/80 disabled:opacity-50 rounded-lg font-medium transition-colors cursor-pointer"
                 >
-                    <Plus className="w-4 h-4" />
+                    <Plus className="w-4 h-4"/>
                     {loading ? "Creating..." : "Create Manufacturer"}
                 </button>
             </form>
@@ -128,7 +128,7 @@ export function ManufacturerForm({ manufacturers, onRefresh }: ManufacturerFormP
                                     className="p-2 hover:bg-red-500/10 rounded-lg transition-colors cursor-pointer"
                                     title="Delete"
                                 >
-                                    <Trash2 className="w-4 h-4 text-red-500" />
+                                    <Trash2 className="w-4 h-4 text-red-500"/>
                                 </button>
                             </div>
                         ))

@@ -1,5 +1,5 @@
-import { parseGCode } from './lib/gcode-parser'
-import { readFileSync } from 'fs'
+import {parseGCode} from './lib/gcode-parser'
+import {readFileSync} from 'fs'
 import path from 'path'
 
 // Test with the sample G-code file

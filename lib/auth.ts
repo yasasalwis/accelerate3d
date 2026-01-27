@@ -1,6 +1,6 @@
-import NextAuth, { NextAuthOptions } from "next-auth";
+import {NextAuthOptions} from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { db } from "./db";
+import {db} from "./db";
 import bcrypt from "bcrypt";
 
 export const authOptions: NextAuthOptions = {
@@ -11,8 +11,8 @@ export const authOptions: NextAuthOptions = {
         CredentialsProvider({
             name: "Credentials",
             credentials: {
-                username: { label: "Username", type: "text" },
-                password: { label: "Password", type: "password" },
+                username: {label: "Username", type: "text"},
+                password: {label: "Password", type: "password"},
             },
             async authorize(credentials) {
                 if (!credentials?.username || !credentials?.password) {
@@ -20,7 +20,7 @@ export const authOptions: NextAuthOptions = {
                 }
 
                 const user = await db.user.findUnique({
-                    where: { username: credentials.username },
+                    where: {username: credentials.username},
                 });
 
                 if (!user || !user.passwordHash) {
@@ -45,15 +45,15 @@ export const authOptions: NextAuthOptions = {
         }),
     ],
     callbacks: {
-        async jwt({ token, user }) {
+        async jwt({token, user}) {
             if (user) {
                 token.id = user.id;
             }
             return token;
         },
-        async session({ session, token }) {
+        async session({session, token}) {
             if (session.user) {
-                (session.user as any).id = token.id;
+                (session.user as { id: string }).id = token.id as string;
             }
             return session;
         },

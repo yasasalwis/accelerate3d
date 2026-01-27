@@ -1,9 +1,9 @@
 "use client"
 
-import { PrinterCard, PrinterStatus } from "@/components/ui/printer-card"
-import { Activity, Zap, Box, Layers, PlayCircle, AlertCircle, CheckCircle2 } from "lucide-react"
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts"
-import { cn } from "@/lib/utils"
+import {PrinterCard, PrinterStatus} from "@/components/ui/printer-card"
+import {Activity, Layers, Zap} from "lucide-react"
+import {Cell, Pie, PieChart, ResponsiveContainer, Tooltip} from "recharts"
+import {cn} from "@/lib/utils"
 
 export type IconKey = "Activity" | "Zap" | "Layers"
 
@@ -24,6 +24,7 @@ export interface PrinterData {
     timeLeft?: string
     temps?: { nozzle: number; bed: number }
     file?: string
+    ipAddress: string
 }
 
 export interface FleetData {
@@ -45,7 +46,15 @@ const iconMap = {
     Layers: Layers
 }
 
-export default function DashboardClient({ printers, stats, fleetData, activePercentage }: DashboardClientProps) {
+export default function DashboardClient({printers, stats, fleetData, activePercentage}: DashboardClientProps) {
+    const handleEdit = (id: string) => {
+        console.log("Edit printer:", id)
+    }
+
+    const handleRemove = (id: string) => {
+        console.log("Remove printer:", id)
+    }
+
     return (
         <div className="space-y-6 max-w-[1600px] mx-auto pb-10">
 
@@ -53,17 +62,20 @@ export default function DashboardClient({ printers, stats, fleetData, activePerc
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 h-auto xl:h-[300px]">
 
                 {/* Fleet Status (Large Card) - Spans 4 columns */}
-                <div className="xl:col-span-4 glass-card rounded-xl border border-white/5 p-6 flex flex-col relative overflow-hidden group">
+                <div
+                    className="xl:col-span-4 glass-card rounded-xl border border-white/5 p-6 flex flex-col relative overflow-hidden group">
                     {/* Background Radial Glow */}
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-neon-cyan/5 blur-[100px] pointer-events-none" />
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-neon-cyan/5 blur-[100px] pointer-events-none"/>
 
                     <div className="flex justify-between items-start z-10">
                         <div>
-                            <h2 className="text-xl font-bold font-rajdhani text-foreground tracking-tight uppercase">Fleet Status</h2>
+                            <h2 className="text-xl font-bold font-rajdhani text-foreground tracking-tight uppercase">Fleet
+                                Status</h2>
                             <p className="text-sm text-zinc-500">Real-time Telemetry</p>
                         </div>
-                        <div className="size-8 rounded-full bg-neon-cyan/10 flex items-center justify-center border border-neon-cyan/20 animate-pulse">
-                            <Activity className="size-5 text-neon-cyan" />
+                        <div
+                            className="size-8 rounded-full bg-neon-cyan/10 flex items-center justify-center border border-neon-cyan/20 animate-pulse">
+                            <Activity className="size-5 text-neon-cyan"/>
                         </div>
                     </div>
 
@@ -85,20 +97,30 @@ export default function DashboardClient({ printers, stats, fleetData, activePerc
                                         endAngle={-270}
                                     >
                                         {fleetData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={entry.color} className="stroke-transparent" />
+                                            <Cell key={`cell-${index}`} fill={entry.color}
+                                                  className="stroke-transparent"/>
                                         ))}
                                     </Pie>
                                     <Tooltip
-                                        contentStyle={{ backgroundColor: '#09090b', borderColor: '#27272a', borderRadius: '8px', color: '#fff', fontSize: '12px' }}
-                                        itemStyle={{ color: '#fff' }}
+                                        contentStyle={{
+                                            backgroundColor: '#09090b',
+                                            borderColor: '#27272a',
+                                            borderRadius: '8px',
+                                            color: '#fff',
+                                            fontSize: '12px'
+                                        }}
+                                        itemStyle={{color: '#fff'}}
                                         formatter={(value: number | undefined) => [value, 'Printers']}
                                     />
                                 </PieChart>
                             </ResponsiveContainer>
                             {/* Ring Text */}
-                            <div className="absolute inset-0 flex items-center justify-center flex-col pointer-events-none">
-                                <span className="text-5xl font-bold font-rajdhani tracking-tighter text-white text-glow">{activePercentage}%</span>
-                                <span className="text-[10px] uppercase text-neon-lime tracking-widest font-semibold">Active</span>
+                            <div
+                                className="absolute inset-0 flex items-center justify-center flex-col pointer-events-none">
+                                <span
+                                    className="text-5xl font-bold font-rajdhani tracking-tighter text-white text-glow">{activePercentage}%</span>
+                                <span
+                                    className="text-[10px] uppercase text-neon-lime tracking-widest font-semibold">Active</span>
                             </div>
                         </div>
 
@@ -140,7 +162,7 @@ export default function DashboardClient({ printers, stats, fleetData, activePerc
                                     stat.color === 'neon-red' && "via-neon-red",
                                     stat.color === 'neon-lime' && "via-neon-lime",
                                     stat.color === 'neon-cyan' && "via-neon-cyan"
-                                )} />
+                                )}/>
 
                                 <div className="flex justify-between items-start">
                                     <div className={cn(
@@ -149,16 +171,19 @@ export default function DashboardClient({ printers, stats, fleetData, activePerc
                                         stat.color === 'neon-lime' && "group-hover:text-neon-lime group-hover:bg-neon-lime/10",
                                         stat.color === 'neon-cyan' && "group-hover:text-neon-cyan group-hover:bg-neon-cyan/10"
                                     )}>
-                                        <Icon className="size-6" />
+                                        <Icon className="size-6"/>
                                     </div>
-                                    <span className="text-xs font-rajdhani font-bold text-zinc-500 uppercase tracking-widest">{stat.sub}</span>
+                                    <span
+                                        className="text-xs font-rajdhani font-bold text-zinc-500 uppercase tracking-widest">{stat.sub}</span>
                                 </div>
 
                                 <div>
-                                    <span className="text-4xl font-bold font-rajdhani tracking-tighter block text-foreground mt-4">{stat.value}</span>
+                                    <span
+                                        className="text-4xl font-bold font-rajdhani tracking-tighter block text-foreground mt-4">{stat.value}</span>
                                     <div className="flex items-center justify-between mt-2">
                                         <span className="text-sm text-zinc-400 font-medium">{stat.title}</span>
-                                        <span className="text-xs text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">{stat.change}</span>
+                                        <span
+                                            className="text-xs text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">{stat.change}</span>
                                     </div>
                                 </div>
                             </div>
@@ -173,7 +198,8 @@ export default function DashboardClient({ printers, stats, fleetData, activePerc
                 <div className="flex items-center justify-between border-b border-white/5 pb-4">
                     <h2 className="text-xl font-semibold font-rajdhani tracking-tight flex items-center gap-3 text-foreground uppercase">
                         <span className="relative flex h-3 w-3">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-neon-lime opacity-75"></span>
+                            <span
+                                className="animate-ping absolute inline-flex h-full w-full rounded-full bg-neon-lime opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-3 w-3 bg-neon-lime"></span>
                         </span>
                         Live Operations
@@ -200,12 +226,16 @@ export default function DashboardClient({ printers, stats, fleetData, activePerc
                     {printers.map((printer) => (
                         <PrinterCard
                             key={printer.id}
+                            id={printer.id}
                             name={printer.name}
                             status={printer.status}
                             progress={printer.progress}
                             timeLeft={printer.timeLeft}
                             temps={printer.temps}
                             file={printer.file}
+                            ipAddress={printer.ipAddress}
+                            onEdit={handleEdit}
+                            onRemove={handleRemove}
                         />
                     ))}
 
@@ -214,10 +244,12 @@ export default function DashboardClient({ printers, stats, fleetData, activePerc
                         onClick={() => window.location.href = '/printers'}
                         className="group relative rounded-xl border border-dashed border-white/10 bg-transparent p-6 hover:bg-white/5 hover:border-white/20 transition-all flex flex-col items-center justify-center gap-4 min-h-[200px] cursor-pointer"
                     >
-                        <div className="size-16 rounded-full bg-black/40 border border-white/10 flex items-center justify-center group-hover:scale-110 transition-transform group-hover:border-neon-cyan/50 group-hover:shadow-[0_0_20px_-5px_var(--neon-cyan)]">
-                            <PlusIcon className="size-8 text-zinc-600 group-hover:text-neon-cyan transition-colors" />
+                        <div
+                            className="size-16 rounded-full bg-black/40 border border-white/10 flex items-center justify-center group-hover:scale-110 transition-transform group-hover:border-neon-cyan/50 group-hover:shadow-[0_0_20px_-5px_var(--neon-cyan)]">
+                            <PlusIcon className="size-8 text-zinc-600 group-hover:text-neon-cyan transition-colors"/>
                         </div>
-                        <span className="text-sm font-bold font-rajdhani uppercase tracking-wider text-zinc-500 group-hover:text-neon-cyan transition-colors">Deploy New Unit</span>
+                        <span
+                            className="text-sm font-bold font-rajdhani uppercase tracking-wider text-zinc-500 group-hover:text-neon-cyan transition-colors">Deploy New Unit</span>
                     </button>
                 </div>
             </div>
@@ -225,11 +257,12 @@ export default function DashboardClient({ printers, stats, fleetData, activePerc
     )
 }
 
-function PlusIcon({ className }: { className?: string }) {
+function PlusIcon({className}: { className?: string }) {
     return (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-            <path d="M5 12h14" />
-            <path d="M12 5v14" />
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+             strokeLinecap="round" strokeLinejoin="round" className={className}>
+            <path d="M5 12h14"/>
+            <path d="M12 5v14"/>
         </svg>
     )
 }

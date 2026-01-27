@@ -1,4 +1,4 @@
-import { default as middleware } from "next-auth/middleware";
+import {default as middleware} from "next-auth/middleware";
 
 export default middleware;
 export const proxy = middleware;

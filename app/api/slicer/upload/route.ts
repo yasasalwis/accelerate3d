@@ -1,24 +1,24 @@
-import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
-import { writeFile, mkdir } from "fs/promises";
+import {NextRequest, NextResponse} from "next/server";
+import {db} from "@/lib/db";
+import {mkdir, writeFile} from "fs/promises";
 import path from "path";
-import { parseGCode } from "@/lib/gcode-parser";
+import {parseGCode} from "@/lib/gcode-parser";
 
 export async function POST(request: NextRequest) {
     const apiKey = request.headers.get("X-Api-Key");
 
     if (!apiKey) {
-        return NextResponse.json({ error: "Missing API Key" }, { status: 401 });
+        return NextResponse.json({error: "Missing API Key"}, {status: 401});
     }
 
     try {
         // 1. Verify API Key
         const userPrinter = await db.userPrinter.findFirst({
-            where: { apiKey }
+            where: {apiKey}
         });
 
         if (!userPrinter) {
-            return NextResponse.json({ error: "Invalid API Key" }, { status: 403 });
+            return NextResponse.json({error: "Invalid API Key"}, {status: 403});
         }
 
         // 2. Process Upload
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
         const file = formData.get("file") as File;
 
         if (!file) {
-            return NextResponse.json({ error: "No file provided" }, { status: 400 });
+            return NextResponse.json({error: "No file provided"}, {status: 400});
         }
 
         const bytes = await file.arrayBuffer();
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
         const filename = `${timestamp}-${safeName}`;
 
         const storageDir = path.join(process.cwd(), "public", "models");
-        await mkdir(storageDir, { recursive: true });
+        await mkdir(storageDir, {recursive: true});
 
         const storagePath = path.join(storageDir, filename);
         await writeFile(storagePath, buffer);
@@ -73,6 +73,6 @@ export async function POST(request: NextRequest) {
 
     } catch (error) {
         console.error("Slicer Upload Error:", error);
-        return NextResponse.json({ error: "Failed to process slicer upload" }, { status: 500 });
+        return NextResponse.json({error: "Failed to process slicer upload"}, {status: 500});
     }
 }

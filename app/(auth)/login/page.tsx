@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import {useState} from "react";
+import {signIn} from "next-auth/react";
+import {useRouter} from "next/navigation";
 import Link from "next/link";
 
 export default function LoginPage() {
@@ -38,11 +38,14 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-[#050505] bg-gradient-to-br from-[#050505] via-[#0a0a0a] to-[#1a0505] p-4">
+        <div
+            className="min-h-screen flex items-center justify-center bg-[#050505] bg-gradient-to-br from-[#050505] via-[#0a0a0a] to-[#1a0505] p-4">
             <div className="w-full max-w-md">
                 <div className="relative group">
-                    <div className="absolute -inset-0.5 bg-gradient-to-r from-red-600 to-red-900 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-                    <div className="relative bg-[#0d0d0d] border border-white/10 backdrop-blur-xl p-8 rounded-2xl shadow-2xl">
+                    <div
+                        className="absolute -inset-0.5 bg-gradient-to-r from-red-600 to-red-900 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+                    <div
+                        className="relative bg-[#0d0d0d] border border-white/10 backdrop-blur-xl p-8 rounded-2xl shadow-2xl">
                         <div className="text-center mb-10">
                             <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400 tracking-tight mb-2 uppercase">
                                 Accelerate<span className="text-red-600">3D</span>
@@ -54,7 +57,8 @@ export default function LoginPage() {
 
                         <form onSubmit={handleSubmit} className="space-y-6">
                             {error && (
-                                <div className="bg-red-500/10 border border-red-500/20 text-red-500 text-sm p-3 rounded-lg text-center animate-pulse">
+                                <div
+                                    className="bg-red-500/10 border border-red-500/20 text-red-500 text-sm p-3 rounded-lg text-center animate-pulse">
                                     {error}
                                 </div>
                             )}

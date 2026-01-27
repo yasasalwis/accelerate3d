@@ -1,5 +1,6 @@
-import { db } from "@/lib/db"
+import {db} from "@/lib/db"
 import PrintersClient from "@/components/printers/printers-client"
+import {PrinterStatus} from "@/components/ui/printer-card"
 
 // Constant for dev mode
 const MOCK_USER_ID = "dev-user-001"
@@ -7,13 +8,13 @@ const MOCK_USER_ID = "dev-user-001"
 export default async function PrintersPage() {
     // Fetch printers assigned to the user
     const userPrinters = await db.userPrinter.findMany({
-        where: { userId: MOCK_USER_ID },
+        where: {userId: MOCK_USER_ID},
         include: {
             printer: true,
             jobs: {
-                where: { status: 'PRINTING' },
+                where: {status: 'PRINTING'},
                 take: 1,
-                include: { model: true }
+                include: {model: true}
             }
         }
     })
@@ -40,10 +41,10 @@ export default async function PrintersPage() {
         return {
             id: up.id,
             name: up.name,
-            status: up.status as any,
+            status: up.status as PrinterStatus,
             progress,
             timeLeft,
-            temps: isPrinting ? { nozzle: 245, bed: 100 } : undefined,
+            temps: isPrinting ? {nozzle: 245, bed: 100} : undefined,
             file: activeJob?.model.name || undefined,
             imageUrl: up.printer.imageUrl || undefined,
             ipAddress: up.ipAddress
@@ -52,7 +53,7 @@ export default async function PrintersPage() {
 
     return (
         <div className="space-y-6">
-            <PrintersClient initialPrinters={printerData} />
+            <PrintersClient initialPrinters={printerData}/>
         </div>
     )
 }

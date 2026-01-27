@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
-import { Plus, Trash2 } from "lucide-react"
-import { createTechnology, deleteTechnology } from "@/lib/admin-actions"
+import {useState} from "react"
+import {Plus, Trash2} from "lucide-react"
+import {createTechnology, deleteTechnology} from "@/lib/admin-actions"
 
 interface Technology {
     id: string
@@ -15,7 +15,7 @@ interface TechnologyFormProps {
     onRefresh: () => void
 }
 
-export function TechnologyForm({ technologies, onRefresh }: TechnologyFormProps) {
+export function TechnologyForm({technologies, onRefresh}: TechnologyFormProps) {
     const [name, setName] = useState("")
     const [description, setDescription] = useState("")
     const [loading, setLoading] = useState(false)
@@ -87,7 +87,7 @@ export function TechnologyForm({ technologies, onRefresh }: TechnologyFormProps)
                     disabled={loading}
                     className="flex items-center gap-2 px-4 py-2 bg-neon-red hover:bg-neon-red/80 disabled:opacity-50 rounded-lg font-medium transition-colors cursor-pointer"
                 >
-                    <Plus className="w-4 h-4" />
+                    <Plus className="w-4 h-4"/>
                     {loading ? "Creating..." : "Create Technology"}
                 </button>
             </form>
@@ -114,7 +114,7 @@ export function TechnologyForm({ technologies, onRefresh }: TechnologyFormProps)
                                     className="p-2 hover:bg-red-500/10 rounded-lg transition-colors cursor-pointer"
                                     title="Delete"
                                 >
-                                    <Trash2 className="w-4 h-4 text-red-500" />
+                                    <Trash2 className="w-4 h-4 text-red-500"/>
                                 </button>
                             </div>
                         ))

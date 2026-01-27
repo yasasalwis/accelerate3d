@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server"
-import { db } from "@/lib/db"
-import { writeFile } from "fs/promises"
+import {NextRequest, NextResponse} from "next/server"
+import {db} from "@/lib/db"
+import {writeFile} from "fs/promises"
 import path from "path"
-import { parseGCode } from "@/lib/gcode-parser"
+import {parseGCode} from "@/lib/gcode-parser"
 
 export async function POST(request: NextRequest) {
     try {
@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
         const filamentGrams = parseFloat(formData.get("filamentGrams") as string || "0")
 
         if (!file) {
-            return NextResponse.json({ error: "No file provided" }, { status: 400 })
+            return NextResponse.json({error: "No file provided"}, {status: 400})
         }
 
         const bytes = await file.arrayBuffer()
@@ -65,6 +65,6 @@ export async function POST(request: NextRequest) {
         })
     } catch (error) {
         console.error("Upload Error:", error)
-        return NextResponse.json({ error: "Failed to upload model" }, { status: 500 })
+        return NextResponse.json({error: "Failed to upload model"}, {status: 500})
     }
 }

@@ -1,6 +1,5 @@
-
-import { db } from "@/lib/db"
-import { PrinterStatus } from "@/components/ui/printer-card"
+import {db} from "@/lib/db"
+import {PrinterStatus} from "@/components/ui/printer-card"
 
 export async function getPrinterStats() {
     const printers = await db.userPrinter.findMany({
@@ -28,10 +27,10 @@ export async function getPrinterStats() {
     })
 
     return [
-        { name: 'Active', value: stats.active, color: 'var(--blood-red-600)' },
-        { name: 'Idle', value: stats.idle, color: '#52525b' },
-        { name: 'Error', value: stats.error, color: '#ef4444' },
-        { name: 'Offline', value: stats.offline, color: '#27272a' },
+        {name: 'Active', value: stats.active, color: 'var(--blood-red-600)'},
+        {name: 'Idle', value: stats.idle, color: '#52525b'},
+        {name: 'Error', value: stats.error, color: '#ef4444'},
+        {name: 'Offline', value: stats.offline, color: '#27272a'},
     ]
 }
 
@@ -41,8 +40,8 @@ export async function getDashboardStats() {
 
     // Calculate total print hours (completed jobs)
     const completedJobs = await db.printJob.findMany({
-        where: { status: 'COMPLETED', startTime: { not: null }, endTime: { not: null } },
-        select: { startTime: true, endTime: true }
+        where: {status: 'COMPLETED', startTime: {not: null}, endTime: {not: null}},
+        select: {startTime: true, endTime: true}
     })
 
     let totalHours = 0
@@ -58,9 +57,15 @@ export async function getDashboardStats() {
     // Let's return the structure expected by the UI
 
     return [
-        { title: "Print Hours", value: `${Math.round(totalHours)}h`, icon: "Activity", change: "Lifetime", sub: "Total Runtime" },
-        { title: "Filament Used", value: "0 kg", icon: "Layers", change: "0 kg today", sub: "Material Usage" }, // Placeholder
-        { title: "Est. Cost", value: "$0.00", icon: "Zap", change: "Current Month", sub: "Power + Material" }, // Placeholder
+        {
+            title: "Print Hours",
+            value: `${Math.round(totalHours)}h`,
+            icon: "Activity",
+            change: "Lifetime",
+            sub: "Total Runtime"
+        },
+        {title: "Filament Used", value: "0 kg", icon: "Layers", change: "0 kg today", sub: "Material Usage"}, // Placeholder
+        {title: "Est. Cost", value: "$0.00", icon: "Zap", change: "Current Month", sub: "Power + Material"}, // Placeholder
     ]
 }
 
@@ -71,7 +76,7 @@ export async function getActivePrinters() {
     const printers = await db.userPrinter.findMany({
         include: {
             jobs: {
-                where: { status: 'PRINTING' },
+                where: {status: 'PRINTING'},
                 take: 1,
                 include: {
                     model: true
@@ -103,7 +108,7 @@ export async function getActivePrinters() {
             status: p.status as PrinterStatus,
             progress: activeJob ? progress : 0,
             timeLeft: activeJob ? timeLeft : undefined,
-            temps: { nozzle: 0, bed: 0 }, // Not in DB yet, would need telemetry
+            temps: {nozzle: 0, bed: 0}, // Not in DB yet, would need telemetry
             file: activeJob?.model.name || undefined
         }
     })
