@@ -7,10 +7,10 @@ import Image from "next/image"
 
 interface Printer {
     id: string
-    make: string
+    manufacturer: { name: string }
     model: string
     imageUrl: string | null
-    technology: string
+    technology: { name: string }
     buildVolumeX: number
     buildVolumeY: number
     buildVolumeZ: number
@@ -41,7 +41,7 @@ export function PrinterSelectionModal({ isOpen, onClose }: { isOpen: boolean, on
 
     const handleSelectPrinter = (printer: Printer) => {
         setSelectedPrinter(printer)
-        setPrinterName(`${printer.make} ${printer.model}`)
+        setPrinterName(`${printer.manufacturer.name} ${printer.model}`)
         setIpAddress("")
     }
 
@@ -70,7 +70,7 @@ export function PrinterSelectionModal({ isOpen, onClose }: { isOpen: boolean, on
 
     const filteredPrinters = printers.filter(p =>
         searchQuery === "" ||
-        p.make.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.manufacturer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.model.toLowerCase().includes(searchQuery.toLowerCase())
     )
 
@@ -133,7 +133,7 @@ export function PrinterSelectionModal({ isOpen, onClose }: { isOpen: boolean, on
                                                 {printer.imageUrl ? (
                                                     <Image
                                                         src={printer.imageUrl}
-                                                        alt={`${printer.make} ${printer.model}`}
+                                                        alt={`${printer.manufacturer.name} ${printer.model}`}
                                                         width={200}
                                                         height={160}
                                                         className="object-contain w-full h-full p-4 group-hover:scale-105 transition-transform"
@@ -156,7 +156,7 @@ export function PrinterSelectionModal({ isOpen, onClose }: { isOpen: boolean, on
                                                 {/* Manufacturer & Model */}
                                                 <div>
                                                     <div className="text-xs text-zinc-500 font-mono uppercase tracking-wider">
-                                                        {printer.make}
+                                                        {printer.manufacturer.name}
                                                     </div>
                                                     <h4 className="font-bold font-rajdhani text-lg uppercase text-white group-hover:text-neon-cyan transition-colors leading-tight">
                                                         {printer.model}
@@ -167,7 +167,7 @@ export function PrinterSelectionModal({ isOpen, onClose }: { isOpen: boolean, on
                                                 <div className="space-y-1.5 pt-2 border-t border-white/5">
                                                     <div className="flex items-center gap-2 text-[11px] text-zinc-400 font-mono">
                                                         <Layers className="size-3 text-zinc-600" />
-                                                        <span>{printer.technology}</span>
+                                                        <span>{printer.technology.name}</span>
                                                     </div>
                                                     <div className="flex items-center gap-2 text-[11px] text-zinc-400 font-mono">
                                                         <Ruler className="size-3 text-zinc-600" />
@@ -229,7 +229,7 @@ export function PrinterSelectionModal({ isOpen, onClose }: { isOpen: boolean, on
                                         {selectedPrinter.imageUrl ? (
                                             <Image
                                                 src={selectedPrinter.imageUrl}
-                                                alt={`${selectedPrinter.make} ${selectedPrinter.model}`}
+                                                alt={`${selectedPrinter.manufacturer.name} ${selectedPrinter.model}`}
                                                 width={80}
                                                 height={80}
                                                 className="object-contain p-2"
@@ -240,13 +240,13 @@ export function PrinterSelectionModal({ isOpen, onClose }: { isOpen: boolean, on
                                     </div>
                                     <div>
                                         <div className="text-xs text-zinc-500 font-mono uppercase tracking-wider">
-                                            {selectedPrinter.make}
+                                            {selectedPrinter.manufacturer.name}
                                         </div>
                                         <h4 className="font-bold font-rajdhani text-xl uppercase text-white">
                                             {selectedPrinter.model}
                                         </h4>
                                         <div className="text-xs text-zinc-400 font-mono mt-1">
-                                            {selectedPrinter.technology} • {selectedPrinter.buildVolumeX}×{selectedPrinter.buildVolumeY}×{selectedPrinter.buildVolumeZ} mm
+                                            {selectedPrinter.technology.name} • {selectedPrinter.buildVolumeX}×{selectedPrinter.buildVolumeY}×{selectedPrinter.buildVolumeZ} mm
                                         </div>
                                     </div>
                                 </div>

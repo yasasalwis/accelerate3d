@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, Printer, FileBox, ListOrdered, BarChart3, ChevronLeft, ChevronRight, User, PanelLeftClose, PanelLeftOpen } from "lucide-react"
+import { LayoutDashboard, Printer, FileBox, ListOrdered, BarChart3, ChevronLeft, ChevronRight, User, PanelLeftClose, PanelLeftOpen, Settings } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useState } from "react"
 
@@ -12,6 +12,7 @@ const sidebarItems = [
     { name: "3D Models", href: "/models", icon: FileBox },
     { name: "Queue", href: "/queue", icon: ListOrdered },
     { name: "Analytics", href: "/stats", icon: BarChart3 },
+    { name: "Admin", href: "/admin", icon: Settings },
 ]
 
 export function Sidebar() {

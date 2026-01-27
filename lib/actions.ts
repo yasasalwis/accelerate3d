@@ -72,10 +72,18 @@ export async function getAvailablePrinters() {
         },
         select: {
             id: true,
-            make: true,
+            manufacturer: {
+                select: {
+                    name: true
+                }
+            },
             model: true,
             imageUrl: true,
-            technology: true,
+            technology: {
+                select: {
+                    name: true
+                }
+            },
             buildVolumeX: true,
             buildVolumeY: true,
             buildVolumeZ: true,

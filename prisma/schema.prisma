@@ -46,24 +46,60 @@ model UserPrinter {
   @@unique([userId, printerId])
 }
 
+model Manufacturer {
+  id        String    @id @default(uuid())
+  name      String    @unique
+  country   String?
+  website   String?
+  createdAt DateTime  @default(now())
+  printers  Printer[]
+}
+
+model PrinterTechnology {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  description String?
+  createdAt   DateTime  @default(now())
+  printers    Printer[]
+}
+
+model PrinterFeature {
+  id          String                  @id @default(uuid())
+  name        String                  @unique
+  description String?
+  createdAt   DateTime                @default(now())
+  printers    PrinterFeatureMapping[]
+}
+
+model PrinterFeatureMapping {
+  printerId String
+  featureId String
+  printer   Printer        @relation(fields: [printerId], references: [id], onDelete: Cascade)
+  feature   PrinterFeature @relation(fields: [featureId], references: [id], onDelete: Cascade)
+
+  @@id([printerId, featureId])
+}
+
 model Printer {
-  id                   String        @id @default(uuid())
-  make                 String
+  id                   String                  @id @default(uuid())
+  manufacturerId       String
   model                String
+  technologyId         String
   buildVolumeX         Float
   buildVolumeY         Float
   buildVolumeZ         Float
-  technology           String
   maxPowerConsumptionW Int?
   priceUsd             Float?
   imageUrl             String?
   sourceUrl            String?
-  features             String?
-  createdAt            DateTime      @default(now())
-  updatedAt            DateTime      @updatedAt
+  createdAt            DateTime                @default(now())
+  updatedAt            DateTime                @updatedAt
+  manufacturer         Manufacturer            @relation(fields: [manufacturerId], references: [id])
+  technology           PrinterTechnology       @relation(fields: [technologyId], references: [id])
+  features             PrinterFeatureMapping[]
   userPrinters         UserPrinter[]
 
-  @@unique([make, model])
+  @@unique([manufacturerId, model])
 }
 
 model Model {

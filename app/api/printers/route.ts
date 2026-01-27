@@ -9,7 +9,11 @@ export async function GET() {
         const userPrinters = await db.userPrinter.findMany({
             where: { userId: MOCK_USER_ID },
             include: {
-                printer: true
+                printer: {
+                    include: {
+                        manufacturer: true
+                    }
+                }
             }
         })
 
@@ -19,7 +23,7 @@ export async function GET() {
             name: up.name,
             status: up.status,
             type: up.type,
-            make: up.printer.make,
+            make: up.printer.manufacturer.name,
             model: up.printer.model
         }))
 

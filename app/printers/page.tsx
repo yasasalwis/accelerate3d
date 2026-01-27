@@ -44,7 +44,9 @@ export default async function PrintersPage() {
             progress,
             timeLeft,
             temps: isPrinting ? { nozzle: 245, bed: 100 } : undefined,
-            file: activeJob?.model.name || undefined
+            file: activeJob?.model.name || undefined,
+            imageUrl: up.printer.imageUrl || undefined,
+            ipAddress: up.ipAddress
         }
     })
 

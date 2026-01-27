@@ -13,6 +13,8 @@ interface Printer {
     timeLeft?: string
     temps?: { nozzle: number; bed: number }
     file?: string
+    imageUrl?: string
+    ipAddress: string
 }
 
 export default function PrintersClient({ initialPrinters }: { initialPrinters: Printer[] }) {

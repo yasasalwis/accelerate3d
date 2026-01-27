@@ -3,7 +3,7 @@ import { db } from "@/lib/db"
 import { PrinterStatus } from "@/components/ui/printer-card"
 
 export async function getPrinterStats() {
-    const printers = await db.printer.findMany({
+    const printers = await db.userPrinter.findMany({
         select: {
             status: true
         }
@@ -65,10 +65,10 @@ export async function getDashboardStats() {
 }
 
 export async function getActivePrinters() {
-    // Fetch printers and their current job if printing
-    // We need to know which job is current. Schema has currentJobId on Printer.
+    // Fetch userPrinters and their current job if printing
+    // Schema has currentJobId on UserPrinter, and status is on UserPrinter too
 
-    const printers = await db.printer.findMany({
+    const printers = await db.userPrinter.findMany({
         include: {
             jobs: {
                 where: { status: 'PRINTING' },
