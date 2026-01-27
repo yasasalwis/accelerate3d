@@ -19,7 +19,7 @@ async function ensureDevUser() {
     return user.id
 }
 
-export async function addPrinterToUser(printerId: string) {
+export async function addPrinterToUser(printerId: string, name: string, ipAddress: string) {
     const userId = await ensureDevUser()
 
     await db.userPrinter.upsert({
@@ -33,6 +33,8 @@ export async function addPrinterToUser(printerId: string) {
         create: {
             userId,
             printerId,
+            name,
+            ipAddress,
         }
     })
 
@@ -68,7 +70,17 @@ export async function getAvailablePrinters() {
         where: {
             id: { notIn: assignedIds }
         },
-        include: { definition: true }
+        select: {
+            id: true,
+            make: true,
+            model: true,
+            imageUrl: true,
+            technology: true,
+            buildVolumeX: true,
+            buildVolumeY: true,
+            buildVolumeZ: true,
+            priceUsd: true
+        }
     })
 }
 
@@ -81,12 +93,8 @@ export async function schedulePrint(modelId: string, quantity: number) {
     const userPrinters = await db.userPrinter.findMany({
         where: { userId },
         include: {
-            printer: {
-                include: {
-                    definition: true,
-                    jobs: { where: { status: "PENDING" } }
-                }
-            }
+            printer: true,
+            jobs: { where: { status: "PENDING" } }
         }
     })
 
@@ -94,8 +102,7 @@ export async function schedulePrint(modelId: string, quantity: number) {
 
     // 2. Filter compatible printers
     const compatiblePrinters = userPrinters.filter(up => {
-        const def = up.printer.definition
-        if (!def) return true // Generic printer
+        const def = up.printer
         return def.buildVolumeX >= model.widthMm &&
             def.buildVolumeY >= model.depthMm &&
             def.buildVolumeZ >= model.heightMm
@@ -115,12 +122,12 @@ export async function schedulePrint(modelId: string, quantity: number) {
 
         // For simplicity, we'll just pick the one with most IDLE status or fewest pending jobs
         // Refined load balancing:
-        const sorted = [...compatiblePrinters].sort((a, b) => a.printer.jobs.length - b.printer.jobs.length)
-        const target = sorted[0].printer
+        const sorted = [...compatiblePrinters].sort((a, b) => a.jobs.length - b.jobs.length)
+        const target = sorted[0]
 
         await db.printJob.create({
             data: {
-                printerId: target.id,
+                userPrinterId: target.id,
                 modelId: model.id,
                 status: "PENDING"
             }
