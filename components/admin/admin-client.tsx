@@ -1,11 +1,11 @@
 "use client"
 
-import {useState} from "react"
-import {useRouter} from "next/navigation"
-import {ManufacturerForm} from "./manufacturer-form"
-import {TechnologyForm} from "./technology-form"
-import {FeatureForm} from "./feature-form"
-import {PrinterForm} from "./printer-form"
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { ManufacturerForm } from "./manufacturer-form"
+import { TechnologyForm } from "./technology-form"
+import { FeatureForm } from "./feature-form"
+import { PrinterForm } from "./printer-form"
 
 interface Manufacturer {
     id: string
@@ -57,13 +57,13 @@ interface AdminClientProps {
 }
 
 const tabs = [
-    {id: "manufacturers", label: "Manufacturers"},
-    {id: "technologies", label: "Technologies"},
-    {id: "features", label: "Features"},
-    {id: "printers", label: "Market Printers"},
+    { id: "manufacturers", label: "Manufacturers" },
+    { id: "technologies", label: "Technologies" },
+    { id: "features", label: "Features" },
+    { id: "printers", label: "Market Printers" },
 ]
 
-export default function AdminClient({manufacturers, technologies, features, printers}: AdminClientProps) {
+export default function AdminClient({ manufacturers, technologies, features, printers }: AdminClientProps) {
     const [activeTab, setActiveTab] = useState("manufacturers")
     const router = useRouter()
 
@@ -82,7 +82,7 @@ export default function AdminClient({manufacturers, technologies, features, prin
                         className={`px-4 py-2 font-medium transition-colors cursor-pointer ${activeTab === tab.id
                             ? "text-neon-red border-b-2 border-neon-red"
                             : "text-muted-foreground hover:text-white"
-                        }`}
+                            }`}
                     >
                         {tab.label}
                     </button>
@@ -92,13 +92,13 @@ export default function AdminClient({manufacturers, technologies, features, prin
             {/* Tab Content */}
             <div>
                 {activeTab === "manufacturers" && (
-                    <ManufacturerForm manufacturers={manufacturers} onRefresh={handleRefresh}/>
+                    <ManufacturerForm manufacturers={manufacturers} onRefresh={handleRefresh} />
                 )}
                 {activeTab === "technologies" && (
-                    <TechnologyForm technologies={technologies} onRefresh={handleRefresh}/>
+                    <TechnologyForm technologies={technologies} onRefresh={handleRefresh} />
                 )}
                 {activeTab === "features" && (
-                    <FeatureForm features={features} onRefresh={handleRefresh}/>
+                    <FeatureForm features={features} onRefresh={handleRefresh} />
                 )}
                 {activeTab === "printers" && (
                     <PrinterForm

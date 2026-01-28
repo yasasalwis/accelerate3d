@@ -1,14 +1,15 @@
 "use server"
 
-import {db} from "./db"
-import {revalidatePath} from "next/cache"
+import { db } from "./db"
+import { revalidatePath } from "next/cache"
+import { detectPrinterProtocol } from "./printer-network"
 
 // Mock User ID for development until Auth is implemented
 const MOCK_USER_ID = "dev-user-001"
 
 async function ensureDevUser() {
     const user = await db.user.upsert({
-        where: {id: MOCK_USER_ID},
+        where: { id: MOCK_USER_ID },
         update: {},
         create: {
             id: MOCK_USER_ID,
@@ -19,8 +20,13 @@ async function ensureDevUser() {
     return user.id
 }
 
-export async function addPrinterToUser(printerId: string, name: string, ipAddress: string) {
+export async function addPrinterToUser(printerId: string, name: string, ipAddress: string, protocol: string = "AUTO") {
     const userId = await ensureDevUser()
+
+    let detectedProtocol = protocol
+    if (protocol === "AUTO") {
+        detectedProtocol = await detectPrinterProtocol(ipAddress)
+    }
 
     await db.userPrinter.create({
         data: {
@@ -28,6 +34,10 @@ export async function addPrinterToUser(printerId: string, name: string, ipAddres
             printerId,
             name,
             ipAddress,
+            // @ts-ignore
+            protocol: detectedProtocol,
+            // @ts-ignore
+            lastSeen: detectedProtocol !== "UNKNOWN" ? new Date() : null
         }
     })
 
@@ -53,16 +63,27 @@ export async function updateUserPrinter(userPrinterId: string, name: string, ipA
 
     // Verify ownership
     const existing = await db.userPrinter.findFirst({
-        where: {id: userPrinterId, userId}
+        where: { id: userPrinterId, userId }
     })
 
     if (!existing) {
         throw new Error("Printer not found or access denied")
     }
 
+    // If IP changed, re-detect protocol
+    // @ts-ignore
+    let protocol = existing.protocol
+    // @ts-ignore
+    let lastSeen = existing.lastSeen
+    if (ipAddress !== existing.ipAddress) {
+        protocol = await detectPrinterProtocol(ipAddress)
+        if (protocol !== "UNKNOWN") lastSeen = new Date()
+    }
+
     await db.userPrinter.update({
-        where: {id: userPrinterId},
-        data: {name, ipAddress}
+        where: { id: userPrinterId },
+        // @ts-ignore
+        data: { name, ipAddress, protocol, lastSeen }
     })
 
     revalidatePath("/printers")
@@ -89,15 +110,15 @@ export async function getAvailablePrinters() {
 
 export async function schedulePrint(modelId: string, quantity: number) {
     const userId = await ensureDevUser()
-    const model = await db.model.findUnique({where: {id: modelId}})
+    const model = await db.model.findUnique({ where: { id: modelId } })
     if (!model) throw new Error("Model not found")
 
     // 1. Get user printers
     const userPrinters = await db.userPrinter.findMany({
-        where: {userId},
+        where: { userId },
         include: {
             printer: true,
-            jobs: {where: {status: "PENDING"}}
+            jobs: { where: { status: "PENDING" } }
         }
     })
 
@@ -129,5 +150,13 @@ export async function schedulePrint(modelId: string, quantity: number) {
         })
     }
 
+    revalidatePath("/queue")
+}
+
+export async function removePrintJob(printJobId: string) {
+    await ensureDevUser()
+    await db.printJob.delete({
+        where: { id: printJobId }
+    })
     revalidatePath("/queue")
 }

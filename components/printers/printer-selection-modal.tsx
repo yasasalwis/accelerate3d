@@ -1,8 +1,8 @@
 "use client"
 
-import {useEffect, useState} from "react"
-import {ArrowLeft, Cpu, Layers, Plus, Ruler, Search, X} from "lucide-react"
-import {addPrinterToUser, getAvailablePrinters} from "@/lib/actions"
+import { useEffect, useState } from "react"
+import { ArrowLeft, Cpu, Layers, Plus, Ruler, Search, X } from "lucide-react"
+import { addPrinterToUser, getAvailablePrinters } from "@/lib/actions"
 import Image from "next/image"
 
 interface Printer {
@@ -17,7 +17,7 @@ interface Printer {
     priceUsd: number | null
 }
 
-export function PrinterSelectionModal({isOpen, onClose}: { isOpen: boolean, onClose: () => void }) {
+export function PrinterSelectionModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
     const [printers, setPrinters] = useState<Printer[]>([])
     const [loading, setLoading] = useState(true)
     const [adding, setAdding] = useState(false)
@@ -25,6 +25,7 @@ export function PrinterSelectionModal({isOpen, onClose}: { isOpen: boolean, onCl
     const [selectedPrinter, setSelectedPrinter] = useState<Printer | null>(null)
     const [printerName, setPrinterName] = useState("")
     const [ipAddress, setIpAddress] = useState("")
+    const [protocol, setProtocol] = useState("AUTO")
 
     useEffect(() => {
         if (isOpen) {
@@ -32,6 +33,7 @@ export function PrinterSelectionModal({isOpen, onClose}: { isOpen: boolean, onCl
             setSelectedPrinter(null)
             setPrinterName("")
             setIpAddress("")
+            setProtocol("AUTO")
             getAvailablePrinters().then(data => {
                 setPrinters(data as Printer[])
                 setLoading(false)
@@ -43,6 +45,7 @@ export function PrinterSelectionModal({isOpen, onClose}: { isOpen: boolean, onCl
         setSelectedPrinter(printer)
         setPrinterName(`${printer.manufacturer.name} ${printer.model}`)
         setIpAddress("")
+        setProtocol("AUTO")
     }
 
     const handleAdd = async () => {
@@ -50,7 +53,7 @@ export function PrinterSelectionModal({isOpen, onClose}: { isOpen: boolean, onCl
 
         setAdding(true)
         try {
-            await addPrinterToUser(selectedPrinter.id, printerName.trim(), ipAddress.trim())
+            await addPrinterToUser(selectedPrinter.id, printerName.trim(), ipAddress.trim(), protocol)
             setPrinters(prev => prev.filter(p => p.id !== selectedPrinter.id))
             setSelectedPrinter(null)
             setPrinterName("")
@@ -78,7 +81,7 @@ export function PrinterSelectionModal({isOpen, onClose}: { isOpen: boolean, onCl
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose}/>
+            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
 
             <div
                 className="relative w-full max-w-4xl bg-zinc-950 border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200">
@@ -94,8 +97,8 @@ export function PrinterSelectionModal({isOpen, onClose}: { isOpen: boolean, onCl
                                     registry to add to your dashboard.</p>
                             </div>
                             <button onClick={onClose}
-                                    className="p-2 hover:bg-white/5 rounded-full text-zinc-500 hover:text-white transition-colors">
-                                <X className="size-5"/>
+                                className="p-2 hover:bg-white/5 rounded-full text-zinc-500 hover:text-white transition-colors">
+                                <X className="size-5" />
                             </button>
                         </div>
 
@@ -103,7 +106,7 @@ export function PrinterSelectionModal({isOpen, onClose}: { isOpen: boolean, onCl
                         <div className="p-4 border-b border-white/5">
                             <div className="relative group">
                                 <Search
-                                    className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-zinc-500 group-focus-within:text-neon-cyan transition-colors"/>
+                                    className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-zinc-500 group-focus-within:text-neon-cyan transition-colors" />
                                 <input
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -118,11 +121,11 @@ export function PrinterSelectionModal({isOpen, onClose}: { isOpen: boolean, onCl
                             {loading ? (
                                 <div className="flex items-center justify-center h-48">
                                     <div
-                                        className="size-8 border-2 border-neon-cyan border-t-transparent rounded-full animate-spin"/>
+                                        className="size-8 border-2 border-neon-cyan border-t-transparent rounded-full animate-spin" />
                                 </div>
                             ) : filteredPrinters.length === 0 ? (
                                 <div className="flex flex-col items-center justify-center h-48 text-zinc-600">
-                                    <Cpu className="size-12 mb-2 opacity-20"/>
+                                    <Cpu className="size-12 mb-2 opacity-20" />
                                     <p className="text-sm font-mono tracking-tighter">
                                         {searchQuery ? "No printers match your search." : "No available printers found on network."}
                                     </p>
@@ -150,14 +153,14 @@ export function PrinterSelectionModal({isOpen, onClose}: { isOpen: boolean, onCl
                                                         }}
                                                     />
                                                 ) : (
-                                                    <Cpu className="size-16 text-zinc-700"/>
+                                                    <Cpu className="size-16 text-zinc-700" />
                                                 )}
 
                                                 {/* Add Button Overlay */}
                                                 <div
                                                     className="absolute top-2 right-2 bg-zinc-900/90 backdrop-blur-sm rounded-lg p-2 group-hover:bg-neon-cyan/20 transition-colors border border-white/10">
                                                     <Plus
-                                                        className="size-4 text-zinc-400 group-hover:text-neon-cyan transition-colors"/>
+                                                        className="size-4 text-zinc-400 group-hover:text-neon-cyan transition-colors" />
                                                 </div>
                                             </div>
 
@@ -178,12 +181,12 @@ export function PrinterSelectionModal({isOpen, onClose}: { isOpen: boolean, onCl
                                                 <div className="space-y-1.5 pt-2 border-t border-white/5">
                                                     <div
                                                         className="flex items-center gap-2 text-[11px] text-zinc-400 font-mono">
-                                                        <Layers className="size-3 text-zinc-600"/>
+                                                        <Layers className="size-3 text-zinc-600" />
                                                         <span>{printer.technology.name}</span>
                                                     </div>
                                                     <div
                                                         className="flex items-center gap-2 text-[11px] text-zinc-400 font-mono">
-                                                        <Ruler className="size-3 text-zinc-600"/>
+                                                        <Ruler className="size-3 text-zinc-600" />
                                                         <span>{printer.buildVolumeX}×{printer.buildVolumeY}×{printer.buildVolumeZ} mm</span>
                                                     </div>
                                                     {printer.priceUsd && (
@@ -223,7 +226,7 @@ export function PrinterSelectionModal({isOpen, onClose}: { isOpen: boolean, onCl
                                     onClick={handleBack}
                                     className="p-2 hover:bg-white/5 rounded-full text-zinc-500 hover:text-white transition-colors"
                                 >
-                                    <ArrowLeft className="size-5"/>
+                                    <ArrowLeft className="size-5" />
                                 </button>
                                 <div>
                                     <h2 className="text-2xl font-bold font-rajdhani uppercase tracking-tight text-white">Configure
@@ -233,8 +236,8 @@ export function PrinterSelectionModal({isOpen, onClose}: { isOpen: boolean, onCl
                                 </div>
                             </div>
                             <button onClick={onClose}
-                                    className="p-2 hover:bg-white/5 rounded-full text-zinc-500 hover:text-white transition-colors">
-                                <X className="size-5"/>
+                                className="p-2 hover:bg-white/5 rounded-full text-zinc-500 hover:text-white transition-colors">
+                                <X className="size-5" />
                             </button>
                         </div>
 
@@ -255,7 +258,7 @@ export function PrinterSelectionModal({isOpen, onClose}: { isOpen: boolean, onCl
                                                 className="object-contain p-2"
                                             />
                                         ) : (
-                                            <Cpu className="size-8 text-zinc-700"/>
+                                            <Cpu className="size-8 text-zinc-700" />
                                         )}
                                     </div>
                                     <div>
@@ -304,6 +307,24 @@ export function PrinterSelectionModal({isOpen, onClose}: { isOpen: boolean, onCl
                                             The local network IP address of your printer
                                         </p>
                                     </div>
+
+                                    <div>
+                                        <label className="block text-sm font-mono text-zinc-400 mb-2">
+                                            Protocol
+                                        </label>
+                                        <select
+                                            value={protocol}
+                                            onChange={(e) => setProtocol(e.target.value)}
+                                            className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-sm font-mono focus:ring-1 focus:ring-neon-cyan/20 outline-none transition-all text-white appearance-none"
+                                        >
+                                            <option value="AUTO">Auto Detect</option>
+                                            <option value="MOONRAKER">Moonraker</option>
+                                            <option value="MQTT">MQTT</option>
+                                        </select>
+                                        <p className="text-xs text-zinc-600 font-mono mt-1">
+                                            Select the communication protocol manually if detection fails
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -324,7 +345,7 @@ export function PrinterSelectionModal({isOpen, onClose}: { isOpen: boolean, onCl
                                 {adding ? (
                                     <>
                                         <div
-                                            className="size-4 border-2 border-black/20 border-t-black rounded-full animate-spin"/>
+                                            className="size-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
                                         Adding...
                                     </>
                                 ) : (

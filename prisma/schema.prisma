@@ -35,6 +35,8 @@ model UserPrinter {
   type               String     @default("FDM")
   isAutoEjectCapable Boolean    @default(false)
   currentJobId       String?
+  protocol           String     @default("UNKNOWN")
+  lastSeen           DateTime?
   createdAt          DateTime   @default(now())
   updatedAt          DateTime   @updatedAt
   printerId          String
