@@ -1,11 +1,11 @@
 "use client"
 
-import { useState, useEffect } from "react" // Added useEffect
-import { Clock, Play, Zap } from "lucide-react"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { schedulePrint, removePrintJob } from "@/lib/actions"
-import { useRouter } from "next/navigation" // Added useRouter
+import {useEffect, useState} from "react" // Added useEffect
+import {Clock, Play, Zap} from "lucide-react"
+import {cn} from "@/lib/utils"
+import {Button} from "@/components/ui/button"
+import {removePrintJob, schedulePrint} from "@/lib/actions"
+import {useRouter} from "next/navigation" // Added useRouter
 
 interface Job {
     id: string
@@ -26,7 +26,7 @@ interface Model {
     name: string
 }
 
-export default function QueueClient({ initialJobs, models }: { initialJobs: Job[], models: Model[] }) {
+export default function QueueClient({initialJobs, models}: { initialJobs: Job[], models: Model[] }) {
     const router = useRouter() // Added router
     const [jobs, setJobs] = useState(initialJobs) // Changed to setJobs
 
@@ -47,10 +47,10 @@ export default function QueueClient({ initialJobs, models }: { initialJobs: Job[
     const [quantity, setQuantity] = useState(1)
 
     const columns = [
-        { id: "PENDING", title: "Backlog", color: "text-zinc-400", bg: "bg-zinc-800/20" },
-        { id: "PRINTING", title: "Active", color: "text-neon-lime", bg: "bg-neon-lime/5" },
-        { id: "COMPLETED", title: "Done", color: "text-neon-cyan", bg: "bg-neon-cyan/5" },
-        { id: "FAILED", title: "Failed", color: "text-neon-red", bg: "bg-neon-red/5" },
+        {id: "PENDING", title: "Backlog", color: "text-zinc-400", bg: "bg-zinc-800/20"},
+        {id: "PRINTING", title: "Active", color: "text-neon-lime", bg: "bg-neon-lime/5"},
+        {id: "COMPLETED", title: "Done", color: "text-neon-cyan", bg: "bg-neon-cyan/5"},
+        {id: "FAILED", title: "Failed", color: "text-neon-red", bg: "bg-neon-red/5"},
     ]
 
     const handleSchedule = async () => {
@@ -74,7 +74,7 @@ export default function QueueClient({ initialJobs, models }: { initialJobs: Job[
                 className="bg-zinc-900/40 border border-white/5 rounded-2xl p-6 glass flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tighter uppercase font-rajdhani text-white flex items-center gap-3">
-                        <Zap className="size-6 text-neon-red fill-neon-red/20" />
+                        <Zap className="size-6 text-neon-red fill-neon-red/20"/>
                         Smart Scheduler
                     </h1>
                     <p className="text-sm text-zinc-500 font-mono">Auto-distribute prints across compatible
@@ -122,7 +122,7 @@ export default function QueueClient({ initialJobs, models }: { initialJobs: Job[
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 min-h-[60vh]">
                 {columns.map((col) => (
                     <div key={col.id}
-                        className={cn("flex flex-col gap-4 rounded-2xl p-4 border border-white/5", col.bg)}>
+                         className={cn("flex flex-col gap-4 rounded-2xl p-4 border border-white/5", col.bg)}>
                         <div className="flex items-center justify-between mb-2">
                             <h3 className={cn("font-bold font-rajdhani uppercase tracking-tighter text-lg", col.color)}>
                                 {col.title}
@@ -142,11 +142,11 @@ export default function QueueClient({ initialJobs, models }: { initialJobs: Job[
                                     <div className="flex justify-between items-start mb-2">
                                         <h4 className="font-bold font-rajdhani uppercase text-sm text-zinc-200 truncate pr-2">{job.model.name}</h4>
                                         {job.status === "PRINTING" &&
-                                            <Play className="size-3 text-neon-lime animate-pulse" />}
+                                            <Play className="size-3 text-neon-lime animate-pulse"/>}
                                     </div>
 
                                     <div className="flex items-center gap-2 text-[10px] font-mono text-zinc-500 mb-3">
-                                        <Clock className="size-3" />
+                                        <Clock className="size-3"/>
                                         <span>{Math.round(job.model.estimatedTime / 60)}m est.</span>
                                         {job.printer && (
                                             <>

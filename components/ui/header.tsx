@@ -2,7 +2,6 @@
 
 import {usePathname} from "next/navigation"
 import {Bell} from "lucide-react"
-import {Badge} from "@/components/ui/badge"
 import {NotificationList} from "@/components/notifications/notification-list"
 import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover"
 import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query"
@@ -19,7 +18,7 @@ export function Header() {
             if (!res.ok) throw new Error("Failed to fetch notifications")
             return res.json()
         },
-        refetchInterval: 30000, // Refresh every 30 seconds
+        refetchInterval: 5000, // Refresh every 5 seconds for live updates
     })
 
     const markReadMutation = useMutation({
@@ -64,12 +63,6 @@ export function Header() {
 
             {/* Global Status & Actions */}
             <div className="flex items-center gap-4">
-                {/* Status Indicator */}
-                <Badge variant="premium" className="gap-2 px-3 py-1 font-mono uppercase tracking-wider">
-                    <div className="size-1.5 rounded-full bg-emerald-500 animate-pulse"/>
-                    System Online
-                </Badge>
-
                 <Popover>
                     <PopoverTrigger asChild>
                         <button className="relative p-2 text-zinc-500 hover:text-zinc-200 transition-colors">

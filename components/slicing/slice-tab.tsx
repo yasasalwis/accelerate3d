@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { CheckCircle, AlertCircle, Loader2, Download, Settings2, ChevronDown, ChevronUp } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { sliceFile } from "@/lib/slicer-actions"
+import {useEffect, useState} from "react"
+import {AlertCircle, CheckCircle, ChevronDown, ChevronUp, Download, Loader2, Settings2} from "lucide-react"
+import {Button} from "@/components/ui/button"
+import {sliceFile} from "@/lib/slicer-actions"
 
 interface SlicerProfile {
     name: string
@@ -28,7 +28,7 @@ interface ProfileDefaults {
 export default function SliceTab() {
     const [file, setFile] = useState<File | null>(null)
     const [slicer, setSlicer] = useState<"prusa" | "orca" | "bambu">("prusa")
-    const [profiles, setProfiles] = useState<SlicerProfilesResponse>({ prusa: [], orca: [], bambu: [] })
+    const [profiles, setProfiles] = useState<SlicerProfilesResponse>({prusa: [], orca: [], bambu: []})
     const [selectedProfile, setSelectedProfile] = useState<string>("")
     const [status, setStatus] = useState<"idle" | "uploading" | "slicing" | "done" | "error">("idle")
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -155,7 +155,7 @@ export default function SliceTab() {
                 setGcodeUrl(result.gcodeUrl)
                 setGcodeFilename(result.filename || "model.gcode")
             }
-        } catch (_err) {
+        } catch {
             setStatus("error")
             setErrorMessage("An unexpected error occurred.")
         }
@@ -181,7 +181,7 @@ export default function SliceTab() {
                         />
                         {file && (
                             <div className="absolute right-3 top-2.5 text-emerald-400">
-                                <CheckCircle className="w-5 h-5" />
+                                <CheckCircle className="w-5 h-5"/>
                             </div>
                         )}
                     </div>
@@ -196,7 +196,7 @@ export default function SliceTab() {
                             className={`p-3 rounded-lg border text-sm font-medium transition-colors ${slicer === "prusa"
                                 ? "bg-orange-600/20 border-orange-500 text-orange-200"
                                 : "bg-zinc-900 border-zinc-700 text-zinc-400 hover:bg-zinc-800"
-                                }`}
+                            }`}
                         >
                             PrusaSlicer
                         </button>
@@ -205,7 +205,7 @@ export default function SliceTab() {
                             className={`p-3 rounded-lg border text-sm font-medium transition-colors ${slicer === "orca"
                                 ? "bg-emerald-600/20 border-emerald-500 text-emerald-200"
                                 : "bg-zinc-900 border-zinc-700 text-zinc-400 hover:bg-zinc-800"
-                                }`}
+                            }`}
                         >
                             OrcaSlicer
                         </button>
@@ -214,7 +214,7 @@ export default function SliceTab() {
                             className={`p-3 rounded-lg border text-sm font-medium transition-colors ${slicer === "bambu"
                                 ? "bg-green-600/20 border-green-500 text-green-200"
                                 : "bg-zinc-900 border-zinc-700 text-zinc-400 hover:bg-zinc-800"
-                                }`}
+                            }`}
                         >
                             BambuLab
                         </button>
@@ -248,17 +248,18 @@ export default function SliceTab() {
                         className="w-full flex items-center justify-between p-3 bg-zinc-800/50 hover:bg-zinc-800 transition-colors"
                     >
                         <div className="flex items-center gap-2 text-sm font-medium text-zinc-200">
-                            <Settings2 className="w-4 h-4" />
+                            <Settings2 className="w-4 h-4"/>
                             <span>Advanced Settings</span>
                         </div>
-                        {showAdvanced ? <ChevronUp className="w-4 h-4 text-zinc-400" /> : <ChevronDown className="w-4 h-4 text-zinc-400" />}
+                        {showAdvanced ? <ChevronUp className="w-4 h-4 text-zinc-400"/> :
+                            <ChevronDown className="w-4 h-4 text-zinc-400"/>}
                     </button>
 
                     {showAdvanced && (
                         <div className="p-4 bg-zinc-900/30 space-y-4 border-t border-zinc-700/50">
                             {loadingDefaults ? (
                                 <div className="flex justify-center p-4">
-                                    <Loader2 className="w-5 h-5 animate-spin text-zinc-500" />
+                                    <Loader2 className="w-5 h-5 animate-spin text-zinc-500"/>
                                 </div>
                             ) : (
                                 <>
@@ -267,10 +268,11 @@ export default function SliceTab() {
                                         <div className="flex items-center justify-between">
                                             <span className="text-sm text-zinc-300">Supports</span>
                                             <div
-                                                onClick={() => setFormState(s => ({ ...s, supports: !s.supports }))}
+                                                onClick={() => setFormState(s => ({...s, supports: !s.supports}))}
                                                 className={`w-10 h-5 rounded-full relative cursor-pointer transition-colors ${formState.supports ? "bg-blue-600" : "bg-zinc-700"}`}
                                             >
-                                                <div className={`w-3 h-3 bg-white rounded-full absolute top-1 transition-all ${formState.supports ? "left-6" : "left-1"}`} />
+                                                <div
+                                                    className={`w-3 h-3 bg-white rounded-full absolute top-1 transition-all ${formState.supports ? "left-6" : "left-1"}`}/>
                                             </div>
                                         </div>
                                         {formState.supports && (
@@ -278,7 +280,10 @@ export default function SliceTab() {
                                                 <label className="text-xs text-zinc-500 block mb-1">Type</label>
                                                 <select
                                                     value={formState.supportType}
-                                                    onChange={(e) => setFormState(s => ({ ...s, supportType: e.target.value }))}
+                                                    onChange={(e) => setFormState(s => ({
+                                                        ...s,
+                                                        supportType: e.target.value
+                                                    }))}
                                                     className="w-full bg-zinc-950 border border-zinc-700 rounded p-1.5 text-sm text-zinc-200"
                                                 >
                                                     <option value="grid">Grid</option>
@@ -294,10 +299,11 @@ export default function SliceTab() {
                                         <div className="flex items-center justify-between">
                                             <span className="text-sm text-zinc-300">Brim</span>
                                             <div
-                                                onClick={() => setFormState(s => ({ ...s, brim: !s.brim }))}
+                                                onClick={() => setFormState(s => ({...s, brim: !s.brim}))}
                                                 className={`w-10 h-5 rounded-full relative cursor-pointer transition-colors ${formState.brim ? "bg-blue-600" : "bg-zinc-700"}`}
                                             >
-                                                <div className={`w-3 h-3 bg-white rounded-full absolute top-1 transition-all ${formState.brim ? "left-6" : "left-1"}`} />
+                                                <div
+                                                    className={`w-3 h-3 bg-white rounded-full absolute top-1 transition-all ${formState.brim ? "left-6" : "left-1"}`}/>
                                             </div>
                                         </div>
                                         {formState.brim && (
@@ -306,7 +312,10 @@ export default function SliceTab() {
                                                 <input
                                                     type="number"
                                                     value={formState.brimWidth}
-                                                    onChange={(e) => setFormState(s => ({ ...s, brimWidth: Number(e.target.value) }))}
+                                                    onChange={(e) => setFormState(s => ({
+                                                        ...s,
+                                                        brimWidth: Number(e.target.value)
+                                                    }))}
                                                     className="w-full bg-zinc-950 border border-zinc-700 rounded p-1.5 text-sm text-zinc-200"
                                                 />
                                             </div>
@@ -321,7 +330,10 @@ export default function SliceTab() {
                                                 <label className="text-xs text-zinc-500 block mb-1">Density</label>
                                                 <select
                                                     value={formState.infill}
-                                                    onChange={(e) => setFormState(s => ({ ...s, infill: e.target.value }))}
+                                                    onChange={(e) => setFormState(s => ({
+                                                        ...s,
+                                                        infill: e.target.value
+                                                    }))}
                                                     className="w-full bg-zinc-950 border border-zinc-700 rounded p-1.5 text-sm text-zinc-200"
                                                 >
                                                     <option value="0%">0%</option>
@@ -334,7 +346,10 @@ export default function SliceTab() {
                                                 <label className="text-xs text-zinc-500 block mb-1">Pattern</label>
                                                 <select
                                                     value={formState.infillPattern}
-                                                    onChange={(e) => setFormState(s => ({ ...s, infillPattern: e.target.value }))}
+                                                    onChange={(e) => setFormState(s => ({
+                                                        ...s,
+                                                        infillPattern: e.target.value
+                                                    }))}
                                                     className="w-full bg-zinc-950 border border-zinc-700 rounded p-1.5 text-sm text-zinc-200"
                                                 >
                                                     <option value="grid">Grid</option>
@@ -355,8 +370,9 @@ export default function SliceTab() {
                     {status === "idle" || status === "error" ? (
                         <div className="space-y-4">
                             {status === "error" && errorMessage && (
-                                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center gap-2 text-red-400 text-sm">
-                                    <AlertCircle className="w-4 h-4" />
+                                <div
+                                    className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center gap-2 text-red-400 text-sm">
+                                    <AlertCircle className="w-4 h-4"/>
                                     {errorMessage}
                                 </div>
                             )}
@@ -370,8 +386,9 @@ export default function SliceTab() {
                         </div>
                     ) : status === "done" ? (
                         <div className="space-y-4">
-                            <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-lg flex items-center gap-3 text-emerald-400">
-                                <CheckCircle className="w-5 h-5 flex-shrink-0" />
+                            <div
+                                className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-lg flex items-center gap-3 text-emerald-400">
+                                <CheckCircle className="w-5 h-5 flex-shrink-0"/>
                                 <div className="flex-1">
                                     <p className="font-medium">Slicing Completed & Added to Models!</p>
                                     <p className="text-xs opacity-80">{gcodeFilename}</p>
@@ -382,7 +399,7 @@ export default function SliceTab() {
                                 download={gcodeFilename}
                                 className="inline-flex items-center justify-center w-full gap-2 bg-zinc-100 hover:bg-white text-zinc-900 font-medium py-2.5 rounded-lg transition-colors"
                             >
-                                <Download className="w-4 h-4" />
+                                <Download className="w-4 h-4"/>
                                 Download G-Code
                             </a>
                             <Button
@@ -398,8 +415,9 @@ export default function SliceTab() {
                             </Button>
                         </div>
                     ) : (
-                        <div className="p-8 border border-zinc-800 rounded-lg bg-zinc-900/50 flex flex-col items-center justify-center gap-4 text-center">
-                            <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+                        <div
+                            className="p-8 border border-zinc-800 rounded-lg bg-zinc-900/50 flex flex-col items-center justify-center gap-4 text-center">
+                            <Loader2 className="w-8 h-8 animate-spin text-blue-500"/>
                             <div className="space-y-1">
                                 <p className="font-medium text-zinc-200">
                                     {status === "uploading" ? "Uploading Model..." : "Slicing Model..."}

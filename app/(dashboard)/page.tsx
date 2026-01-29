@@ -1,9 +1,9 @@
-import { db } from "@/lib/db"
-import DashboardClient, { FleetData, MetricStat, PrinterData } from "@/components/dashboard/dashboard-client"
-import { PrinterStatus } from "@/components/ui/printer-card"
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { redirect } from "next/navigation";
+import {db} from "@/lib/db"
+import DashboardClient, {FleetData, MetricStat, PrinterData} from "@/components/dashboard/dashboard-client"
+import {PrinterStatus} from "@/components/ui/printer-card"
+import {getServerSession} from "next-auth";
+import {authOptions} from "@/lib/auth";
+import {redirect} from "next/navigation";
 
 interface SessionUser {
     id: string;
@@ -23,12 +23,12 @@ export default async function Dashboard() {
         where: {
             userId: (session.user as SessionUser).id
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: {createdAt: 'desc'},
         include: {
             jobs: {
-                where: { status: 'PRINTING' },
+                where: {status: 'PRINTING'},
                 take: 1,
-                include: { model: true }
+                include: {model: true}
             }
         }
     })
@@ -70,7 +70,7 @@ export default async function Dashboard() {
             status: p.status as PrinterStatus,
             progress,
             timeLeft,
-            temps: isPrinting ? { nozzle: 245, bed: 100 } : undefined, // Currently hardcoded; needs a Telemetry table
+            temps: isPrinting ? {nozzle: 245, bed: 100} : undefined, // Currently hardcoded; needs a Telemetry table
             file: activeJob?.model.name || undefined,
             ipAddress: p.ipAddress
         }
@@ -84,10 +84,10 @@ export default async function Dashboard() {
     const totalPrinters = printers.length
 
     const fleetData: FleetData[] = [
-        { name: 'Active', value: activeCount, color: '#CCFF00' }, // Cyber Lime
-        { name: 'Idle', value: idleCount, color: '#00FFFF' }, // Neon Cyan
-        { name: 'Error', value: errorCount, color: '#FF0033' }, // Neon Red
-        { name: 'Offline', value: offlineCount, color: '#1e293b' }, // Slate-800
+        {name: 'Active', value: activeCount, color: '#CCFF00'}, // Cyber Lime
+        {name: 'Idle', value: idleCount, color: '#00FFFF'}, // Neon Cyan
+        {name: 'Error', value: errorCount, color: '#FF0033'}, // Neon Red
+        {name: 'Offline', value: offlineCount, color: '#1e293b'}, // Slate-800
     ]
 
     const activePercentage = totalPrinters > 0 ? Math.round((activeCount / totalPrinters) * 100) : 0
@@ -101,7 +101,7 @@ export default async function Dashboard() {
                 userId: (session.user as SessionUser).id
             }
         },
-        include: { model: true }
+        include: {model: true}
     })
 
     let totalPrintHours = 0
@@ -109,7 +109,10 @@ export default async function Dashboard() {
 
     completedJobs.forEach(job => {
         // Use stored job time if available, or estimated time from model
-        if (job.startTime && job.endTime) {
+        // Use actualDuration if available (most accurate), then fallback to timestamps, then estimate
+        if (job.actualDuration && job.actualDuration > 0) {
+            totalPrintHours += job.actualDuration / 3600
+        } else if (job.startTime && job.endTime) {
             const durationMs = job.endTime.getTime() - job.startTime.getTime()
             totalPrintHours += durationMs / (1000 * 60 * 60)
         } else {

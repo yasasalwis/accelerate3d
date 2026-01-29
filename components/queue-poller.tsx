@@ -23,7 +23,7 @@ export function QueuePoller() {
                 } else {
                     setError("Failed to process queue")
                 }
-            } catch (_e) {
+            } catch {
                 setError("Connection error")
             }
         }, 30000) // Check every 30 seconds

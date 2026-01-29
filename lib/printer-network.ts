@@ -14,7 +14,7 @@ interface PrinterStatus {
  * Attempts to detect the protocol used by a printer at the given IP or URL.
  */
 export async function detectPrinterProtocol(input: string): Promise<PrinterProtocol> {
-    const { host, port, protocol } = parseConnectionInput(input)
+    const {host, port, protocol} = parseConnectionInput(input)
 
     // 1. If explicit protocol provided in URL (e.g., http://...), favor that check first or exclusively?
     // For simplicity, if it looks like an HTTP URL, check Moonraker. If mqtt://, check MQTT.
@@ -50,14 +50,14 @@ export async function detectPrinterProtocol(input: string): Promise<PrinterProto
                     targetUrl = `http://${host}:${p}/printer/info`
                 }
 
-                const res = await fetch(targetUrl, { signal: controller.signal })
+                const res = await fetch(targetUrl, {signal: controller.signal})
                 clearTimeout(id)
 
                 if (res.ok) {
                     console.log(`Detected Moonraker on ${targetUrl}`)
                     return "MOONRAKER"
                 }
-            } catch (_e) {
+            } catch {
                 // Ignore
             }
         }
@@ -69,7 +69,7 @@ export async function detectPrinterProtocol(input: string): Promise<PrinterProto
             const targetHost = protocol?.startsWith('mqtt') ? input : `mqtt://${host}${port ? ':' + port : ''}`
             const isMqtt = await checkMqtt(targetHost)
             if (isMqtt) return "MQTT"
-        } catch (_e) {
+        } catch {
             // Ignore
         }
     }
@@ -86,14 +86,14 @@ function parseConnectionInput(input: string) {
         // Assume raw IP or Hostname
         // Check for port
         const [h, p] = input.split(':')
-        return { host: h, port: p, protocol: null }
+        return {host: h, port: p, protocol: null}
     }
 
     try {
         const u = new URL(input)
-        return { host: u.hostname, port: u.port, protocol: u.protocol }
+        return {host: u.hostname, port: u.port, protocol: u.protocol}
     } catch {
-        return { host: input, port: null, protocol: null }
+        return {host: input, port: null, protocol: null}
     }
 }
 
@@ -131,11 +131,11 @@ export async function getPrinterStatus(input: string, protocol: string): Promise
     } else if (protocol === "MQTT") {
         return getMqttStatus(input)
     }
-    return { status: "OFFLINE" }
+    return {status: "OFFLINE"}
 }
 
 async function getMqttStatus(input: string): Promise<PrinterStatus> {
-    const { host, port } = parseConnectionInput(input)
+    const {host, port} = parseConnectionInput(input)
     const brokerUrl = `mqtt://${host}${port ? ':' + port : ''}`
 
     return new Promise((resolve) => {
@@ -154,7 +154,7 @@ async function getMqttStatus(input: string): Promise<PrinterStatus> {
 
         // Timeout after 5 seconds
         const timeout = setTimeout(() => {
-            finish({ status: "OFFLINE" })
+            finish({status: "OFFLINE"})
         }, 5000)
 
         client.on("connect", () => {
@@ -169,7 +169,7 @@ async function getMqttStatus(input: string): Promise<PrinterStatus> {
             ], (err) => {
                 if (err) {
                     clearTimeout(timeout)
-                    finish({ status: "ONLINE" })
+                    finish({status: "ONLINE"})
                 }
             })
         })
@@ -182,13 +182,13 @@ async function getMqttStatus(input: string): Promise<PrinterStatus> {
                 finish(status)
             } catch {
                 // If message isn't JSON, just confirm online
-                finish({ status: "ONLINE" })
+                finish({status: "ONLINE"})
             }
         })
 
         client.on("error", () => {
             clearTimeout(timeout)
-            finish({ status: "OFFLINE" })
+            finish({status: "OFFLINE"})
         })
     })
 }
@@ -242,7 +242,7 @@ function parseMqttPrinterData(data: Record<string, unknown>): PrinterStatus {
 
 async function getMoonrakerStatus(input: string): Promise<PrinterStatus> {
     try {
-        const { host, port, protocol } = parseConnectionInput(input)
+        const {host, port, protocol} = parseConnectionInput(input)
 
         // Determine correct base URL
         // If the user provided a specific URL/Port that worked during detection, we should ideally use that.
@@ -295,7 +295,7 @@ async function getMoonrakerStatus(input: string): Promise<PrinterStatus> {
 
     } catch (e) {
         console.error(`Failed to get Moonraker status for ${input}:`, e)
-        return { status: "OFFLINE" }
+        return {status: "OFFLINE"}
     }
 }
 
@@ -303,7 +303,7 @@ async function isPortOpen(baseUrl: string): Promise<boolean> {
     try {
         const u = new URL(baseUrl)
         u.pathname = "/printer/info"
-        await fetch(u.toString(), { method: 'HEAD', signal: AbortSignal.timeout(1000) })
+        await fetch(u.toString(), {method: 'HEAD', signal: AbortSignal.timeout(1000)})
         return true
     } catch {
         return false

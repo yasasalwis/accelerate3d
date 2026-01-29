@@ -1,5 +1,4 @@
-
-import { db } from "@/lib/db"
+import {db} from "@/lib/db"
 
 async function main() {
     try {

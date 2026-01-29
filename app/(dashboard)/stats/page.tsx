@@ -24,8 +24,8 @@ export default async function StatsPage() {
                 userId: userId
             }
         },
-        include: { model: true },
-        orderBy: { endTime: 'asc' }
+        include: {model: true},
+        orderBy: {endTime: 'asc'}
     })
 
     const completedJobs = allJobs.filter(job => job.status === 'COMPLETED')
@@ -36,11 +36,11 @@ export default async function StatsPage() {
     const activeNodesCount = await db.userPrinter.count({
         where: {
             userId: userId,
-            status: { not: 'OFFLINE' }
+            status: {not: 'OFFLINE'}
         }
     })
     const totalNodesCount = await db.userPrinter.count({
-        where: { userId: userId }
+        where: {userId: userId}
     })
 
     // 3. Fetch Material Stats
@@ -91,7 +91,7 @@ export default async function StatsPage() {
     completedJobs.forEach(job => {
         if (!job.endTime) return
         const dateKey = format(job.endTime, 'MMM dd')
-        const existing = dailyUsage.get(dateKey) || { grams: 0, seconds: 0 }
+        const existing = dailyUsage.get(dateKey) || {grams: 0, seconds: 0}
 
         let seconds: number
         if (job.startTime) {
@@ -114,7 +114,7 @@ export default async function StatsPage() {
     for (let i = 6; i >= 0; i--) {
         const d = subDays(today, i)
         const key = format(d, 'MMM dd')
-        const data = dailyUsage.get(key) || { grams: 0, seconds: 0 }
+        const data = dailyUsage.get(key) || {grams: 0, seconds: 0}
         chartData.push({
             date: key,
             grams: data.grams,

@@ -3,6 +3,7 @@ import {getPrinterClient, MoonrakerClient} from "./printer-client";
 import path from "path";
 import fs from "fs";
 import {injectEjectGcode} from "./gcode-utils";
+import {createNotificationFromEvent, NotificationEvents} from "./notification-service";
 
 export async function processPendingJobs() {
     console.log("Starting Scheduler: processPendingJobs...");
@@ -45,14 +46,10 @@ export async function processPendingJobs() {
                             data: {status: 'OFFLINE'}
                         });
 
-                        await db.notification.create({
-                            data: {
-                                userId: printer.userId,
-                                title: "Printer Disconnected",
-                                message: `Printer "${printer.name}" went offline during a print job.`,
-                                type: "ERROR"
-                            }
-                        });
+                        await createNotificationFromEvent(
+                            printer.userId,
+                            NotificationEvents.PRINTER_DISCONNECTED(printer.name)
+                        );
                     }
                     continue;
                 }
@@ -84,19 +81,41 @@ export async function processPendingJobs() {
                             where: {id: printer.currentJobId},
                             data: {
                                 status: jobStatus,
-                                endTime: new Date()
+                                endTime: new Date(),
+                                actualDuration: Math.round(printDuration)
                             }
                         }),
                         db.userPrinter.update({
                             where: {id: printer.id},
                             data: {
                                 status: "IDLE",
-                                currentJobId: null
+                                currentJobId: null,
+                                progress: 0,
+                                estimatedTimeLeft: 0
                             }
                         })
                     ]);
                 }
-                // If still PRINTING or PAUSED, do nothing.
+
+                // If still PRINTING or PAUSED, update progress stats
+                if (status.state === 'PRINTING' || status.state === 'PAUSED') {
+                    const totalDur = status.totalDuration || 0;
+                    const printDur = status.printDuration || 0;
+                    let timeLeft = 0;
+                    if (totalDur > 0) {
+                        timeLeft = Math.max(0, totalDur - printDur);
+                    }
+
+                    // Update DB with latest progress
+                    await db.userPrinter.update({
+                        where: {id: printer.id},
+                        data: {
+                            progress: status.progress || 0,
+                            estimatedTimeLeft: Math.round(timeLeft),
+                            lastSeen: new Date()
+                        }
+                    });
+                }
 
             } catch (err: unknown) {
                 const error = err as Error;
@@ -133,6 +152,14 @@ export async function processPendingJobs() {
 
                 // Update DB status if it changed (e.g. was OFFLINE, now IDLE)
                 if (status.state !== 'OFFLINE' && userPrinter.status !== 'PRINTING' && userPrinter.status !== status.state) {
+                    // Check if printer just came online (was OFFLINE, now reachable)
+                    if (userPrinter.status === 'OFFLINE') {
+                        await createNotificationFromEvent(
+                            userPrinter.userId,
+                            NotificationEvents.PRINTER_ONLINE(userPrinter.name)
+                        );
+                    }
+
                     await db.userPrinter.update({
                         where: {id: userPrinter.id},
                         data: {status: status.state, lastSeen: new Date()}
@@ -143,14 +170,10 @@ export async function processPendingJobs() {
                     if (userPrinter.status !== 'OFFLINE') {
                         await db.userPrinter.update({where: {id: userPrinter.id}, data: {status: 'OFFLINE'}});
 
-                        await db.notification.create({
-                            data: {
-                                userId: userPrinter.userId,
-                                title: "Printer Offline",
-                                message: `Printer "${userPrinter.name}" is unreachable.`,
-                                type: "WARNING"
-                            }
-                        });
+                        await createNotificationFromEvent(
+                            userPrinter.userId,
+                            NotificationEvents.PRINTER_OFFLINE(userPrinter.name)
+                        );
                     }
                     results.logs.push(`Printer ${userPrinter.name} is OFFLINE.`);
                     continue;

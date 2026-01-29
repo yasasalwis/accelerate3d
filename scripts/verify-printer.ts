@@ -1,7 +1,7 @@
 import {detectPrinterProtocol} from "@/lib/printer-network"
 
 // Mock fetch
-global.fetch = async (url: RequestInfo | URL, _init?: RequestInit) => {
+global.fetch = async (url: RequestInfo | URL) => {
     const sUrl = url.toString()
     console.log(`[MockFetch] ${sUrl}`)
 

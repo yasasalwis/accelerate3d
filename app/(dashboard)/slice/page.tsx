@@ -11,7 +11,7 @@ export default function SlicePage() {
             </div>
 
             <div className="w-full flex justify-center mt-8">
-                <SliceTab />
+                <SliceTab/>
             </div>
         </div>
     );

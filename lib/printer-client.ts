@@ -136,7 +136,8 @@ export class MqttPrinterClient implements PrinterClient {
         });
     }
 
-    async uploadAndPrint(_filePath: string, _filename: string): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    async uploadAndPrint(filePath: string, filename: string): Promise<void> {
         throw new Error("G-code upload via MQTT is not supported. Please ensure Moonraker HTTP API is accessible.");
     }
 }

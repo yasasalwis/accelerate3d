@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import {useCallback, useEffect, useState} from "react"
 import {
     Activity,
     AlertCircle,
@@ -13,7 +13,7 @@ import {
     WifiOff,
     X
 } from "lucide-react"
-import { cn } from "@/lib/utils"
+import {cn} from "@/lib/utils"
 
 interface PrinterStatus {
     id: string
@@ -39,7 +39,7 @@ interface PrinterDetailClientProps {
     }
 }
 
-export default function PrinterDetailClient({ printerId, initialData }: PrinterDetailClientProps) {
+export default function PrinterDetailClient({printerId, initialData}: PrinterDetailClientProps) {
     const [status, setStatus] = useState<PrinterStatus | null>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
@@ -70,8 +70,8 @@ export default function PrinterDetailClient({ printerId, initialData }: PrinterD
         try {
             const res = await fetch(`/api/printers/${printerId}/control`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ action })
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({action})
             })
             if (!res.ok) {
                 const data = await res.json()
@@ -103,15 +103,15 @@ export default function PrinterDetailClient({ printerId, initialData }: PrinterD
     const getStatusIcon = (s: string) => {
         switch (s) {
             case "PRINTING":
-                return <CircleDashed className="size-5 animate-spin" />
+                return <CircleDashed className="size-5 animate-spin"/>
             case "PAUSED":
-                return <Pause className="size-5" />
+                return <Pause className="size-5"/>
             case "ERROR":
-                return <AlertCircle className="size-5" />
+                return <AlertCircle className="size-5"/>
             case "OFFLINE":
-                return <WifiOff className="size-5" />
+                return <WifiOff className="size-5"/>
             default:
-                return <CheckCircle2 className="size-5" />
+                return <CheckCircle2 className="size-5"/>
         }
     }
 
@@ -119,7 +119,7 @@ export default function PrinterDetailClient({ printerId, initialData }: PrinterD
         return (
             <div className="flex items-center justify-center h-64">
                 <div className="flex items-center gap-3 text-zinc-400">
-                    <RotateCcw className="size-5 animate-spin" />
+                    <RotateCcw className="size-5 animate-spin"/>
                     <span>Connecting to printer...</span>
                 </div>
             </div>
@@ -134,7 +134,8 @@ export default function PrinterDetailClient({ printerId, initialData }: PrinterD
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                    <div className={cn("p-3 rounded-xl bg-zinc-900 border border-zinc-800", getStatusColor(displayStatus))}>
+                    <div
+                        className={cn("p-3 rounded-xl bg-zinc-900 border border-zinc-800", getStatusColor(displayStatus))}>
                         {getStatusIcon(displayStatus)}
                     </div>
                     <div>
@@ -142,7 +143,8 @@ export default function PrinterDetailClient({ printerId, initialData }: PrinterD
                         <div className="flex items-center gap-2 text-sm text-zinc-500">
                             <span>{initialData.ipAddress}</span>
                             {initialData.protocol && initialData.protocol !== "UNKNOWN" && (
-                                <span className="px-1.5 py-0.5 rounded bg-zinc-800 text-xs">{initialData.protocol}</span>
+                                <span
+                                    className="px-1.5 py-0.5 rounded bg-zinc-800 text-xs">{initialData.protocol}</span>
                             )}
                         </div>
                     </div>
@@ -159,8 +161,9 @@ export default function PrinterDetailClient({ printerId, initialData }: PrinterD
             </div>
 
             {error && (
-                <div className="p-4 rounded-xl bg-neon-red/10 border border-neon-red/30 text-neon-red flex items-center gap-3">
-                    <AlertCircle className="size-5" />
+                <div
+                    className="p-4 rounded-xl bg-neon-red/10 border border-neon-red/30 text-neon-red flex items-center gap-3">
+                    <AlertCircle className="size-5"/>
                     <span>{error}</span>
                 </div>
             )}
@@ -180,14 +183,15 @@ export default function PrinterDetailClient({ printerId, initialData }: PrinterD
                                     alt="Live webcam feed"
                                     className="w-full h-full object-contain"
                                 />
-                                <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2 py-1 bg-red-500/80 rounded-md animate-pulse">
-                                    <div className="size-1.5 rounded-full bg-white" />
+                                <div
+                                    className="absolute top-3 right-3 flex items-center gap-1.5 px-2 py-1 bg-red-500/80 rounded-md animate-pulse">
+                                    <div className="size-1.5 rounded-full bg-white"/>
                                     <span className="text-[10px] font-bold text-white uppercase">Live</span>
                                 </div>
                             </div>
                         ) : (
                             <div className="text-zinc-600 flex flex-col items-center gap-2">
-                                <WifiOff className="size-8" />
+                                <WifiOff className="size-8"/>
                                 <span className="text-sm">No video feed available</span>
                             </div>
                         )}
@@ -202,7 +206,7 @@ export default function PrinterDetailClient({ printerId, initialData }: PrinterD
                         <div className="grid grid-cols-2 gap-4">
                             <div className="p-4 rounded-xl bg-zinc-800/50 border border-zinc-700">
                                 <div className="flex items-center gap-2 text-orange-400 mb-2">
-                                    <Thermometer className="size-4" />
+                                    <Thermometer className="size-4"/>
                                     <span className="text-xs uppercase font-medium">Nozzle</span>
                                 </div>
                                 <div className="text-3xl font-bold text-white font-mono">
@@ -211,7 +215,7 @@ export default function PrinterDetailClient({ printerId, initialData }: PrinterD
                             </div>
                             <div className="p-4 rounded-xl bg-zinc-800/50 border border-zinc-700">
                                 <div className="flex items-center gap-2 text-blue-400 mb-2">
-                                    <Thermometer className="size-4" />
+                                    <Thermometer className="size-4"/>
                                     <span className="text-xs uppercase font-medium">Bed</span>
                                 </div>
                                 <div className="text-3xl font-bold text-white font-mono">
@@ -232,17 +236,18 @@ export default function PrinterDetailClient({ printerId, initialData }: PrinterD
                                     </span>
                                     <span className="text-neon-lime font-bold">{status?.progress || 0}%</span>
                                 </div>
-                                <div className="h-3 w-full bg-zinc-800 rounded-full overflow-hidden border border-zinc-700">
+                                <div
+                                    className="h-3 w-full bg-zinc-800 rounded-full overflow-hidden border border-zinc-700">
                                     <div
                                         className="h-full bg-neon-lime transition-all duration-1000 rounded-full relative"
-                                        style={{ width: `${status?.progress || 0}%` }}
+                                        style={{width: `${status?.progress || 0}%`}}
                                     >
-                                        <div className="absolute inset-0 bg-white/20 animate-[shimmer_2s_infinite]" />
+                                        <div className="absolute inset-0 bg-white/20 animate-[shimmer_2s_infinite]"/>
                                     </div>
                                 </div>
                                 {status?.timeLeft && (
                                     <div className="flex items-center gap-2 text-sm text-zinc-500">
-                                        <Activity className="size-4" />
+                                        <Activity className="size-4"/>
                                         <span>{status.timeLeft} remaining</span>
                                     </div>
                                 )}
@@ -262,9 +267,9 @@ export default function PrinterDetailClient({ printerId, initialData }: PrinterD
                                         className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-yellow-400/10 border border-yellow-400/30 text-yellow-400 hover:bg-yellow-400/20 transition-colors disabled:opacity-50"
                                     >
                                         {actionLoading === "pause" ? (
-                                            <RotateCcw className="size-4 animate-spin" />
+                                            <RotateCcw className="size-4 animate-spin"/>
                                         ) : (
-                                            <Pause className="size-4" />
+                                            <Pause className="size-4"/>
                                         )}
                                         <span className="font-semibold">Pause</span>
                                     </button>
@@ -276,9 +281,9 @@ export default function PrinterDetailClient({ printerId, initialData }: PrinterD
                                         className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-neon-lime/10 border border-neon-lime/30 text-neon-lime hover:bg-neon-lime/20 transition-colors disabled:opacity-50"
                                     >
                                         {actionLoading === "resume" ? (
-                                            <RotateCcw className="size-4 animate-spin" />
+                                            <RotateCcw className="size-4 animate-spin"/>
                                         ) : (
-                                            <Play className="size-4" />
+                                            <Play className="size-4"/>
                                         )}
                                         <span className="font-semibold">Resume</span>
                                     </button>
@@ -290,22 +295,24 @@ export default function PrinterDetailClient({ printerId, initialData }: PrinterD
                                         className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-neon-red/10 border border-neon-red/30 text-neon-red hover:bg-neon-red/20 transition-colors disabled:opacity-50"
                                     >
                                         {actionLoading === "cancel" ? (
-                                            <RotateCcw className="size-4 animate-spin" />
+                                            <RotateCcw className="size-4 animate-spin"/>
                                         ) : (
-                                            <X className="size-4" />
+                                            <X className="size-4"/>
                                         )}
                                         <span className="font-semibold">Cancel</span>
                                     </button>
                                 )}
                                 {displayStatus === "IDLE" && (
-                                    <div className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-zinc-800 border border-zinc-700 text-zinc-500">
-                                        <CheckCircle2 className="size-4" />
+                                    <div
+                                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-zinc-800 border border-zinc-700 text-zinc-500">
+                                        <CheckCircle2 className="size-4"/>
                                         <span className="font-semibold">Printer Ready</span>
                                     </div>
                                 )}
                                 {displayStatus === "ERROR" && (
-                                    <div className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-neon-red/10 border border-neon-red/30 text-neon-red">
-                                        <AlertCircle className="size-4" />
+                                    <div
+                                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-neon-red/10 border border-neon-red/30 text-neon-red">
+                                        <AlertCircle className="size-4"/>
                                         <span className="font-semibold">Check Printer</span>
                                     </div>
                                 )}

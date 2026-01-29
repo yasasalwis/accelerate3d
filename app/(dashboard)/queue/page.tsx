@@ -1,9 +1,9 @@
-import { db } from "@/lib/db"
+import {db} from "@/lib/db"
 import QueueClient from "@/components/queue/queue-client"
 
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { redirect } from "next/navigation";
+import {getServerSession} from "next-auth";
+import {authOptions} from "@/lib/auth";
+import {redirect} from "next/navigation";
 
 interface SessionUser {
     id: string;
@@ -25,7 +25,7 @@ export default async function QueuePage() {
             model: true,
             userPrinter: true
         },
-        orderBy: { createdAt: 'desc' }
+        orderBy: {createdAt: 'desc'}
     })
 
     const jobs = dbJobs.map(job => ({
@@ -43,7 +43,7 @@ export default async function QueuePage() {
 
     return (
         <div className="space-y-6">
-            <QueueClient initialJobs={jobs} models={models} />
+            <QueueClient initialJobs={jobs} models={models}/>
         </div>
     )
 }

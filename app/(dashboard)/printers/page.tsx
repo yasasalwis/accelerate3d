@@ -1,9 +1,9 @@
-import { db } from "@/lib/db"
+import {db} from "@/lib/db"
 import PrintersClient from "@/components/printers/printers-client"
-import { PrinterStatus } from "@/components/ui/printer-card"
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { redirect } from "next/navigation";
+import {PrinterStatus} from "@/components/ui/printer-card"
+import {getServerSession} from "next-auth";
+import {authOptions} from "@/lib/auth";
+import {redirect} from "next/navigation";
 
 interface SessionUser {
     id: string;
@@ -17,13 +17,13 @@ export default async function PrintersPage() {
 
     // Fetch printers assigned to the user
     const userPrinters = await db.userPrinter.findMany({
-        where: { userId: (session.user as SessionUser).id },
+        where: {userId: (session.user as SessionUser).id},
         include: {
             printer: true,
             jobs: {
-                where: { status: 'PRINTING' },
+                where: {status: 'PRINTING'},
                 take: 1,
-                include: { model: true }
+                include: {model: true}
             }
         }
     })
@@ -53,7 +53,7 @@ export default async function PrintersPage() {
             status: up.status as PrinterStatus,
             progress,
             timeLeft,
-            temps: isPrinting ? { nozzle: 245, bed: 100 } : undefined,
+            temps: isPrinting ? {nozzle: 245, bed: 100} : undefined,
             file: activeJob?.model.name || undefined,
             imageUrl: up.printer.imageUrl || undefined,
             ipAddress: up.ipAddress,
@@ -64,7 +64,7 @@ export default async function PrintersPage() {
 
     return (
         <div className="space-y-6">
-            <PrintersClient initialPrinters={printerData} />
+            <PrintersClient initialPrinters={printerData}/>
         </div>
     )
 }

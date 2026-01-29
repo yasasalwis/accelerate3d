@@ -4,6 +4,7 @@ import * as React from "react"
 import {Loader2, Minus, Plus, Printer as PrinterIcon, Settings2, X, Zap} from "lucide-react"
 import {Button} from "@/components/ui/button"
 import {cn} from "@/lib/utils"
+import {useNotifications} from "@/components/notifications/notification-context"
 
 interface QueueModelModalProps {
     isOpen: boolean
@@ -19,6 +20,7 @@ export function QueueModelModal({isOpen, onClose, modelId, modelName}: QueueMode
     const [selectedPrinterId, setSelectedPrinterId] = React.useState<string | null>(null)
     const [isAutoQueue, setIsAutoQueue] = React.useState(true)
     const [quantity, setQuantity] = React.useState(1)
+    const {showToast} = useNotifications()
 
     React.useEffect(() => {
         const fetchPrinters = async () => {
@@ -61,17 +63,18 @@ export function QueueModelModal({isOpen, onClose, modelId, modelName}: QueueMode
             })
 
             if (response.ok) {
+                showToast("SUCCESS", "Model Queued", `${quantity > 1 ? `${quantity}x ` : ""}"${modelName}" added to print queue`)
                 onClose()
                 // Reset state
                 setIsAutoQueue(true)
                 setQuantity(1)
             } else {
                 const error = await response.json()
-                alert(`Failed to queue job: ${error.error || "Unknown error"}`)
+                showToast("ERROR", "Queue Failed", error.error || "Failed to add model to queue")
             }
         } catch (error) {
             console.error("Failed to queue job", error)
-            alert("Connection error. Please try again.")
+            showToast("ERROR", "Connection Error", "Failed to connect to server. Please try again.")
         } finally {
             setIsSubmitting(false)
         }

@@ -39,6 +39,8 @@ model UserPrinter {
   lastSeen           DateTime?
   webcamUrl          String?
   ejectGcode         String?
+  progress           Float      @default(0.0)
+  estimatedTimeLeft  Int        @default(0)
   createdAt          DateTime   @default(now())
   updatedAt          DateTime   @updatedAt
   printerId          String
@@ -132,6 +134,7 @@ model PrintJob {
   status             String      @default("PENDING")
   startTime          DateTime?
   endTime            DateTime?
+  actualDuration     Int?        @default(0) // Actual print duration in seconds
   autoEjectTriggered Boolean     @default(false)
   createdAt          DateTime    @default(now())
   model              Model       @relation(fields: [modelId], references: [id])

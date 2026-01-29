@@ -1,12 +1,12 @@
-import { db } from "@/lib/db"
-import { notFound } from "next/navigation"
+import {db} from "@/lib/db"
+import {notFound} from "next/navigation"
 import PrinterDetailClient from "@/components/printers/printer-detail-client"
 
-export default async function PrinterDetailPage({ params }: { params: Promise<{ id: string }> }) {
-    const { id } = await params
+export default async function PrinterDetailPage({params}: { params: Promise<{ id: string }> }) {
+    const {id} = await params
 
     const printer = await db.userPrinter.findUnique({
-        where: { id },
+        where: {id},
         select: {
             id: true,
             name: true,

@@ -3,6 +3,7 @@
 import {useEffect, useState} from "react"
 import {Loader2, Save, X} from "lucide-react"
 import {updateUserPrinter} from "@/lib/actions"
+import {useNotifications} from "@/components/notifications/notification-context"
 
 interface EditPrinterModalProps {
     isOpen: boolean
@@ -20,6 +21,7 @@ export function EditPrinterModal({isOpen, onClose, printer}: EditPrinterModalPro
     const [name, setName] = useState("")
     const [ipAddress, setIpAddress] = useState("")
     const [ejectGcode, setEjectGcode] = useState("")
+    const {showToast} = useNotifications()
 
     useEffect(() => {
         if (printer) {
@@ -68,9 +70,11 @@ M84 ; Finally turn off motors (optional, remove if you want them to stay locked)
 
         try {
             await updateUserPrinter(printer.id, name, ipAddress, ejectGcode)
+            showToast("SUCCESS", "Printer Updated", `"${name}" settings saved successfully`)
             onClose()
         } catch (error) {
             console.error("Failed to update printer:", error)
+            showToast("ERROR", "Update Failed", "Failed to save printer settings")
         } finally {
             setIsLoading(false)
         }

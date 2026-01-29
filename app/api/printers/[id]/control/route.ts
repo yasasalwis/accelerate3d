@@ -5,31 +5,31 @@ type ControlAction = "pause" | "resume" | "cancel"
 
 export async function POST(
     req: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+    {params}: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { id } = await params
+        const {id} = await params
         const body = await req.json()
         const action = body.action as ControlAction
 
         if (!["pause", "resume", "cancel"].includes(action)) {
-            return NextResponse.json({ error: "Invalid action" }, { status: 400 })
+            return NextResponse.json({error: "Invalid action"}, {status: 400})
         }
 
         // Fetch printer from database
         const printer = await db.userPrinter.findUnique({
-            where: { id }
+            where: {id}
         })
 
         if (!printer) {
-            return NextResponse.json({ error: "Printer not found" }, { status: 404 })
+            return NextResponse.json({error: "Printer not found"}, {status: 404})
         }
 
         // Only Moonraker supports control commands currently
         if (printer.protocol !== "MOONRAKER") {
             return NextResponse.json(
-                { error: "Control commands are only supported for Moonraker printers" },
-                { status: 400 }
+                {error: "Control commands are only supported for Moonraker printers"},
+                {status: 400}
             )
         }
 
@@ -61,32 +61,32 @@ export async function POST(
         // Update printer status in database
         if (action === "pause") {
             await db.userPrinter.update({
-                where: { id },
-                data: { status: "PAUSED" }
+                where: {id},
+                data: {status: "PAUSED"}
             })
         } else if (action === "resume") {
             await db.userPrinter.update({
-                where: { id },
-                data: { status: "PRINTING" }
+                where: {id},
+                data: {status: "PRINTING"}
             })
         } else if (action === "cancel") {
             // Update printer and job status
             await db.userPrinter.update({
-                where: { id },
-                data: { status: "IDLE", currentJobId: null }
+                where: {id},
+                data: {status: "IDLE", currentJobId: null}
             })
 
             // Mark the current printing job as failed
             await db.printJob.updateMany({
-                where: { userPrinterId: id, status: "PRINTING" },
-                data: { status: "FAILED", endTime: new Date() }
+                where: {userPrinterId: id, status: "PRINTING"},
+                data: {status: "FAILED", endTime: new Date()}
             })
         }
 
-        return NextResponse.json({ success: true, action })
+        return NextResponse.json({success: true, action})
 
     } catch (error) {
         console.error("Error controlling printer:", error)
-        return NextResponse.json({ error: "Failed to control printer" }, { status: 500 })
+        return NextResponse.json({error: "Failed to control printer"}, {status: 500})
     }
 }

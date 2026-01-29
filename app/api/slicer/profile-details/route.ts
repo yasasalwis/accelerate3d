@@ -4,12 +4,12 @@ export async function GET(request: Request) {
     // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 500))
 
-    const { searchParams } = new URL(request.url)
+    const {searchParams} = new URL(request.url)
     const path = searchParams.get("path")
     searchParams.get("type");  // 'prusa', 'orca', 'bambu' - reserved for future use
 
     if (!path) {
-        return NextResponse.json({ error: "Profile path required" }, { status: 400 })
+        return NextResponse.json({error: "Profile path required"}, {status: 400})
     }
 
     // Mock logic: generate deterministic defaults based on path string to show variation
