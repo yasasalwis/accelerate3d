@@ -30,7 +30,7 @@ export default function LoginPage() {
                 router.push("/");
                 router.refresh();
             }
-        } catch (err) {
+        } catch (_err) {
             setError("An unexpected error occurred");
         } finally {
             setLoading(false);

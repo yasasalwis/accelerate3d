@@ -1,13 +1,29 @@
 import {NextResponse} from "next/server"
 import {db} from "@/lib/db"
 
-// Constant for dev mode - matching the pattern in app/printers/page.tsx
-const MOCK_USER_ID = "dev-user-001"
+import {getServerSession} from "next-auth"
+import {authOptions} from "@/lib/auth"
+
+interface SessionUser {
+    id: string;
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+}
 
 export async function GET() {
     try {
+        const session = await getServerSession(authOptions)
+
+        const user = session?.user as SessionUser | undefined
+        if (!user?.id) {
+            return NextResponse.json({error: "Unauthorized"}, {status: 401})
+        }
+
+        const userId = user.id
+
         const userPrinters = await db.userPrinter.findMany({
-            where: {userId: MOCK_USER_ID},
+            where: {userId: userId},
             include: {
                 printer: {
                     include: {

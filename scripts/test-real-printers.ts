@@ -1,6 +1,5 @@
-
-import { detectPrinterProtocol, getPrinterStatus } from "../lib/printer-network"
-import { db } from "../lib/db"
+import {detectPrinterProtocol, getPrinterStatus} from "@/lib/printer-network"
+import {db} from "@/lib/db"
 
 async function run() {
     console.log("Starting Real Printer Verification...")
@@ -22,8 +21,9 @@ async function run() {
                     console.log(`> Progress: ${status.progress}%`)
                 }
             }
-        } catch (e: any) {
-            console.error(`> Error: ${e.message}`)
+        } catch (e: unknown) {
+            const error = e as Error
+            console.error(`> Error: ${error.message}`)
         }
     }
 
@@ -38,8 +38,9 @@ async function run() {
                 const status = await getPrinterStatus(manualTarget, protocol)
                 console.log(`> Status: ${status.status}`)
             }
-        } catch (e: any) {
-            console.error(`> Error: ${e.message}`)
+        } catch (e: unknown) {
+            const error = e as Error
+            console.error(`> Error: ${error.message}`)
         }
     }
 }

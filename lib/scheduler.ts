@@ -1,8 +1,8 @@
-
-import { db } from "./db";
-import { getPrinterClient, MoonrakerClient, MqttPrinterClient } from "./printer-client";
+import {db} from "./db";
+import {getPrinterClient, MoonrakerClient} from "./printer-client";
 import path from "path";
 import fs from "fs";
+import {injectEjectGcode} from "./gcode-utils";
 
 export async function processPendingJobs() {
     console.log("Starting Scheduler: processPendingJobs...");
@@ -17,29 +17,43 @@ export async function processPendingJobs() {
         // --- 1. MONITOR ACTIVE PRINTS ---
         console.log("Checking active prints...");
         const activePrinters = await db.userPrinter.findMany({
-            where: { status: "PRINTING" },
-            include: { user: true } // Fetch user if needed for notifications
+            where: {status: "PRINTING"},
+            include: {user: true} // Fetch user if needed for notifications
         });
 
         for (const printer of activePrinters) {
             if (!printer.currentJobId) {
                 // Inconsistent state: Internal status is PRINTING but no job linked. Reset.
                 await db.userPrinter.update({
-                    where: { id: printer.id },
-                    data: { status: "IDLE" }
+                    where: {id: printer.id},
+                    data: {status: "IDLE"}
                 });
                 continue;
             }
 
             try {
-                // @ts-ignore
                 const client = await getPrinterClient(printer.ipAddress, printer.protocol);
                 const status = await client.getStatus();
 
                 if (status.state === 'OFFLINE') {
-                    // Printer went offline. Maybe update status or just log?
-                    // For now, we'll just log it.
+                    // Printer went offline. Update status and notify.
                     results.logs.push(`Printer ${printer.name} is OFFLINE during print.`);
+
+                    if (printer.status !== 'OFFLINE') {
+                        await db.userPrinter.update({
+                            where: {id: printer.id},
+                            data: {status: 'OFFLINE'}
+                        });
+
+                        await db.notification.create({
+                            data: {
+                                userId: printer.userId,
+                                title: "Printer Disconnected",
+                                message: `Printer "${printer.name}" went offline during a print job.`,
+                                type: "ERROR"
+                            }
+                        });
+                    }
                     continue;
                 }
 
@@ -67,14 +81,14 @@ export async function processPendingJobs() {
                     // Complete the job
                     await db.$transaction([
                         db.printJob.update({
-                            where: { id: printer.currentJobId },
+                            where: {id: printer.currentJobId},
                             data: {
                                 status: jobStatus,
                                 endTime: new Date()
                             }
                         }),
                         db.userPrinter.update({
-                            where: { id: printer.id },
+                            where: {id: printer.id},
                             data: {
                                 status: "IDLE",
                                 currentJobId: null
@@ -84,8 +98,9 @@ export async function processPendingJobs() {
                 }
                 // If still PRINTING or PAUSED, do nothing.
 
-            } catch (err: any) {
-                console.error(`Error monitoring printer ${printer.name}:`, err);
+            } catch (err: unknown) {
+                const error = err as Error;
+                console.error(`Error monitoring printer ${printer.name}:`, error);
             }
         }
 
@@ -94,12 +109,12 @@ export async function processPendingJobs() {
         // Find IDLE, OFFLINE, or UNKNOWN printers to see if they can take jobs
         const candidatePrinters = await db.userPrinter.findMany({
             where: {
-                status: { in: ["IDLE", "OFFLINE", "UNKNOWN"] }
+                status: {in: ["IDLE", "OFFLINE", "UNKNOWN"]}
             },
             include: {
                 jobs: {
-                    where: { status: "PENDING" },
-                    orderBy: { createdAt: 'asc' },
+                    where: {status: "PENDING"},
+                    orderBy: {createdAt: 'asc'},
                     take: 1
                 },
                 printer: true // To get model/make if needed
@@ -113,22 +128,29 @@ export async function processPendingJobs() {
             let isWorkStealing = false;
 
             try {
-                // 2.1 LIVE STATUS CHECK (Status Recovery)
-                // @ts-ignore
                 const client = await getPrinterClient(userPrinter.ipAddress, userPrinter.protocol);
                 const status = await client.getStatus();
 
                 // Update DB status if it changed (e.g. was OFFLINE, now IDLE)
                 if (status.state !== 'OFFLINE' && userPrinter.status !== 'PRINTING' && userPrinter.status !== status.state) {
                     await db.userPrinter.update({
-                        where: { id: userPrinter.id },
-                        data: { status: status.state, lastSeen: new Date() }
+                        where: {id: userPrinter.id},
+                        data: {status: status.state, lastSeen: new Date()}
                     });
                 }
 
                 if (status.state === 'OFFLINE') {
                     if (userPrinter.status !== 'OFFLINE') {
-                        await db.userPrinter.update({ where: { id: userPrinter.id }, data: { status: 'OFFLINE' } });
+                        await db.userPrinter.update({where: {id: userPrinter.id}, data: {status: 'OFFLINE'}});
+
+                        await db.notification.create({
+                            data: {
+                                userId: userPrinter.userId,
+                                title: "Printer Offline",
+                                message: `Printer "${userPrinter.name}" is unreachable.`,
+                                type: "WARNING"
+                            }
+                        });
                     }
                     results.logs.push(`Printer ${userPrinter.name} is OFFLINE.`);
                     continue;
@@ -136,7 +158,10 @@ export async function processPendingJobs() {
 
                 if (status.state === 'PRINTING' || status.state === 'PAUSED') {
                     if (userPrinter.status !== status.state) {
-                        await db.userPrinter.update({ where: { id: userPrinter.id }, data: { status: status.state, lastSeen: new Date() } });
+                        await db.userPrinter.update({
+                            where: {id: userPrinter.id},
+                            data: {status: status.state, lastSeen: new Date()}
+                        });
                     }
                     results.logs.push(`Printer ${userPrinter.name} is BUSY (${status.state}).`);
                     continue;
@@ -157,10 +182,10 @@ export async function processPendingJobs() {
                     const pendingJobs = await db.printJob.findMany({
                         where: {
                             status: 'PENDING',
-                            userPrinter: { userId: userPrinter.userId }
+                            userPrinter: {userId: userPrinter.userId}
                         },
-                        orderBy: { createdAt: 'asc' },
-                        include: { model: true },
+                        orderBy: {createdAt: 'asc'},
+                        include: {model: true},
                         take: 10 // Look at top 10 to find a fit
                     });
 
@@ -188,10 +213,10 @@ export async function processPendingJobs() {
                 // Fetch full job details if we don't have model (if not stolen)
                 let gcodePath = "";
                 // Use the one we found, need safe access.
-                const fullJob = await db.printJob.findUnique({ where: { id: nextJob.id }, include: { model: true } });
+                const fullJob = await db.printJob.findUnique({where: {id: nextJob.id}, include: {model: true}});
                 if (!fullJob || !fullJob.model.gcodePath) {
                     console.error(`Job ${nextJob.id} has no G-code path. Marking FAILED.`);
-                    await db.printJob.update({ where: { id: nextJob.id }, data: { status: "FAILED" } });
+                    await db.printJob.update({where: {id: nextJob.id}, data: {status: "FAILED"}});
                     results.errors++;
                     continue;
                 }
@@ -209,18 +234,45 @@ export async function processPendingJobs() {
                 // Verify file exists
                 if (!fs.existsSync(fsPath)) {
                     console.error(`G-code file not found at ${fsPath}. Marking FAILED.`);
-                    await db.printJob.update({ where: { id: nextJob.id }, data: { status: "FAILED" } });
+                    await db.printJob.update({where: {id: nextJob.id}, data: {status: "FAILED"}});
                     results.errors++;
                     continue;
                 }
 
                 const filename = path.basename(fsPath);
-                await client.uploadAndPrint(fsPath, filename);
+
+                // INJECTION LOGIC
+                let fileToUpload = fsPath;
+                let isTempFile = false; // Flag to clean up later
+
+                if (userPrinter.ejectGcode) {
+                    try {
+                        console.log(`Injecting eject G-code for printer ${userPrinter.name}...`);
+                        fileToUpload = injectEjectGcode(fsPath, userPrinter.ejectGcode);
+                        isTempFile = true;
+                    } catch (injectErr) {
+                        console.error(`Failed to inject G-code for printer ${userPrinter.name}:`, injectErr);
+                        // Fallback to original file? Or fail? 
+                        // Let's fallback to original but log error
+                        results.logs.push(`G-code injection failed, using original file: ${injectErr}`);
+                    }
+                }
+
+                await client.uploadAndPrint(fileToUpload, filename);
+
+                // Clean up temp file
+                if (isTempFile) {
+                    try {
+                        fs.unlinkSync(fileToUpload);
+                    } catch (e) {
+                        console.error("Failed to delete temp G-code file:", e);
+                    }
+                }
 
                 // Update DB
                 await db.$transaction([
                     db.printJob.update({
-                        where: { id: nextJob.id },
+                        where: {id: nextJob.id},
                         data: {
                             status: "PRINTING",
                             startTime: new Date(),
@@ -228,7 +280,7 @@ export async function processPendingJobs() {
                         }
                     }),
                     db.userPrinter.update({
-                        where: { id: userPrinter.id },
+                        where: {id: userPrinter.id},
                         data: {
                             status: "PRINTING",
                             currentJobId: nextJob.id,
@@ -242,17 +294,18 @@ export async function processPendingJobs() {
                 const stolenText = isWorkStealing ? " (STOLEN)" : "";
                 results.logs.push(`Started job ${nextJob.id}${stolenText} on printer ${userPrinter.name} (${userPrinter.ipAddress})`);
 
-            } catch (err: any) {
-                console.error(`Failed to process job for printer ${userPrinter.name}:`, err);
+            } catch (err: unknown) {
+                const error = err as Error;
+                console.error(`Failed to process job for printer ${userPrinter.name}:`, error);
                 results.errors++;
-                results.logs.push(`Error on printer ${userPrinter.name}: ${err.message}`);
+                results.logs.push(`Error on printer ${userPrinter.name}: ${error.message}`);
 
                 // CRITICAL FIX: IF WE FAILED TO START, MARK JOB AS FAILED TO PREVENT LOOPS
                 if (nextJob) {
                     try {
                         await db.printJob.update({
-                            where: { id: nextJob.id },
-                            data: { status: "FAILED" }
+                            where: {id: nextJob.id},
+                            data: {status: "FAILED"}
                         });
                         results.logs.push(`Marked job ${nextJob.id} as FAILED due to start error.`);
                     } catch (dbErr) {
@@ -262,10 +315,11 @@ export async function processPendingJobs() {
             }
         }
 
-    } catch (globalErr: any) {
-        console.error("Scheduler global error:", globalErr);
+    } catch (globalErr: unknown) {
+        const error = globalErr as Error;
+        console.error("Scheduler global error:", error);
         results.errors++;
-        results.logs.push(`Global Scheduler Error: ${globalErr.message}`);
+        results.logs.push(`Global Scheduler Error: ${error.message}`);
     }
 
     return results;

@@ -1,8 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { ArrowLeft, Cpu, Layers, Plus, Ruler, Search, X } from "lucide-react"
-import { addPrinterToUser, getAvailablePrinters } from "@/lib/actions"
+import {useEffect, useState} from "react"
+import {ArrowLeft, Cpu, Layers, Plus, Ruler, Search, X} from "lucide-react"
+import {addPrinterToUser, getAvailablePrinters} from "@/lib/actions"
 import Image from "next/image"
 
 interface Printer {
@@ -17,7 +17,7 @@ interface Printer {
     priceUsd: number | null
 }
 
-export function PrinterSelectionModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
+export function PrinterSelectionModal({isOpen, onClose}: { isOpen: boolean, onClose: () => void }) {
     const [printers, setPrinters] = useState<Printer[]>([])
     const [loading, setLoading] = useState(true)
     const [adding, setAdding] = useState(false)
@@ -26,6 +26,38 @@ export function PrinterSelectionModal({ isOpen, onClose }: { isOpen: boolean, on
     const [printerName, setPrinterName] = useState("")
     const [ipAddress, setIpAddress] = useState("")
     const [protocol, setProtocol] = useState("AUTO")
+    const [ejectGcode, setEjectGcode] = useState(`; --- START OF PART REMOVAL SCRIPT ---
+M104 S0 ; Turn off extruder heater immediately
+M140 S0 ; Turn off bed heater
+
+; 1. PREVENT MOTOR TIMEOUT
+M84 S0  ; Disable motor idle timeout (Motors stay ON and locked)
+
+; 2. WAIT FOR COOL DOWN
+M190 R30 ; Wait for bed to cool down to 30C (Change 30 to your desired release temp)
+
+; 3. PREPARE FOR RAMMING
+G90 ; Absolute positioning
+G28 X Y ; Home X and Y to ensure we know exactly where we are
+G1 Z10 F3000 ; Lift Z to 10mm to avoid scraping while moving into position
+
+; 4. POSITION BEHIND THE PART
+; Change X110 to the center of your bed (e.g., 110 for Ender 3, 125 for Prusa)
+; Change Y220 to the max Y of your bed (The very back)
+G1 X110 Y220 F3000 
+
+; 5. LOWER THE BOOM
+; CAUTION: Ensure this height hits the part but DOES NOT hit the bed clips or surface
+G1 Z2 F3000 ; Lower nozzle to 2mm above the bed
+
+; 6. THE PUSH
+; Move nozzle to the front (Y0), sweeping the part off the plate
+G1 Y0 F1000 ; Move Y slowly (F1000) to push the part
+
+; 7. FINISH
+G1 Z50 ; Lift head out of the way
+M84 ; Finally turn off motors (optional, remove if you want them to stay locked)
+; --- END OF SCRIPT ---`)
 
     useEffect(() => {
         if (isOpen) {
@@ -53,11 +85,43 @@ export function PrinterSelectionModal({ isOpen, onClose }: { isOpen: boolean, on
 
         setAdding(true)
         try {
-            await addPrinterToUser(selectedPrinter.id, printerName.trim(), ipAddress.trim(), protocol)
+            await addPrinterToUser(selectedPrinter.id, printerName.trim(), ipAddress.trim(), protocol, ejectGcode)
             setPrinters(prev => prev.filter(p => p.id !== selectedPrinter.id))
             setSelectedPrinter(null)
             setPrinterName("")
             setIpAddress("")
+            setEjectGcode(`; --- START OF PART REMOVAL SCRIPT ---
+M104 S0 ; Turn off extruder heater immediately
+M140 S0 ; Turn off bed heater
+
+; 1. PREVENT MOTOR TIMEOUT
+M84 S0  ; Disable motor idle timeout (Motors stay ON and locked)
+
+; 2. WAIT FOR COOL DOWN
+M190 R30 ; Wait for bed to cool down to 30C (Change 30 to your desired release temp)
+
+; 3. PREPARE FOR RAMMING
+G90 ; Absolute positioning
+G28 X Y ; Home X and Y to ensure we know exactly where we are
+G1 Z10 F3000 ; Lift Z to 10mm to avoid scraping while moving into position
+
+; 4. POSITION BEHIND THE PART
+; Change X110 to the center of your bed (e.g., 110 for Ender 3, 125 for Prusa)
+; Change Y220 to the max Y of your bed (The very back)
+G1 X110 Y220 F3000 
+
+; 5. LOWER THE BOOM
+; CAUTION: Ensure this height hits the part but DOES NOT hit the bed clips or surface
+G1 Z2 F3000 ; Lower nozzle to 2mm above the bed
+
+; 6. THE PUSH
+; Move nozzle to the front (Y0), sweeping the part off the plate
+G1 Y0 F1000 ; Move Y slowly (F1000) to push the part
+
+; 7. FINISH
+G1 Z50 ; Lift head out of the way
+M84 ; Finally turn off motors (optional, remove if you want them to stay locked)
+; --- END OF SCRIPT ---`)
         } catch (e) {
             console.error(e)
         } finally {
@@ -81,7 +145,7 @@ export function PrinterSelectionModal({ isOpen, onClose }: { isOpen: boolean, on
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose}/>
 
             <div
                 className="relative w-full max-w-4xl bg-zinc-950 border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200">
@@ -97,8 +161,8 @@ export function PrinterSelectionModal({ isOpen, onClose }: { isOpen: boolean, on
                                     registry to add to your dashboard.</p>
                             </div>
                             <button onClick={onClose}
-                                className="p-2 hover:bg-white/5 rounded-full text-zinc-500 hover:text-white transition-colors">
-                                <X className="size-5" />
+                                    className="p-2 hover:bg-white/5 rounded-full text-zinc-500 hover:text-white transition-colors">
+                                <X className="size-5"/>
                             </button>
                         </div>
 
@@ -106,7 +170,7 @@ export function PrinterSelectionModal({ isOpen, onClose }: { isOpen: boolean, on
                         <div className="p-4 border-b border-white/5">
                             <div className="relative group">
                                 <Search
-                                    className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-zinc-500 group-focus-within:text-neon-cyan transition-colors" />
+                                    className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-zinc-500 group-focus-within:text-neon-cyan transition-colors"/>
                                 <input
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -121,11 +185,11 @@ export function PrinterSelectionModal({ isOpen, onClose }: { isOpen: boolean, on
                             {loading ? (
                                 <div className="flex items-center justify-center h-48">
                                     <div
-                                        className="size-8 border-2 border-neon-cyan border-t-transparent rounded-full animate-spin" />
+                                        className="size-8 border-2 border-neon-cyan border-t-transparent rounded-full animate-spin"/>
                                 </div>
                             ) : filteredPrinters.length === 0 ? (
                                 <div className="flex flex-col items-center justify-center h-48 text-zinc-600">
-                                    <Cpu className="size-12 mb-2 opacity-20" />
+                                    <Cpu className="size-12 mb-2 opacity-20"/>
                                     <p className="text-sm font-mono tracking-tighter">
                                         {searchQuery ? "No printers match your search." : "No available printers found on network."}
                                     </p>
@@ -153,14 +217,14 @@ export function PrinterSelectionModal({ isOpen, onClose }: { isOpen: boolean, on
                                                         }}
                                                     />
                                                 ) : (
-                                                    <Cpu className="size-16 text-zinc-700" />
+                                                    <Cpu className="size-16 text-zinc-700"/>
                                                 )}
 
                                                 {/* Add Button Overlay */}
                                                 <div
                                                     className="absolute top-2 right-2 bg-zinc-900/90 backdrop-blur-sm rounded-lg p-2 group-hover:bg-neon-cyan/20 transition-colors border border-white/10">
                                                     <Plus
-                                                        className="size-4 text-zinc-400 group-hover:text-neon-cyan transition-colors" />
+                                                        className="size-4 text-zinc-400 group-hover:text-neon-cyan transition-colors"/>
                                                 </div>
                                             </div>
 
@@ -181,12 +245,12 @@ export function PrinterSelectionModal({ isOpen, onClose }: { isOpen: boolean, on
                                                 <div className="space-y-1.5 pt-2 border-t border-white/5">
                                                     <div
                                                         className="flex items-center gap-2 text-[11px] text-zinc-400 font-mono">
-                                                        <Layers className="size-3 text-zinc-600" />
+                                                        <Layers className="size-3 text-zinc-600"/>
                                                         <span>{printer.technology.name}</span>
                                                     </div>
                                                     <div
                                                         className="flex items-center gap-2 text-[11px] text-zinc-400 font-mono">
-                                                        <Ruler className="size-3 text-zinc-600" />
+                                                        <Ruler className="size-3 text-zinc-600"/>
                                                         <span>{printer.buildVolumeX}×{printer.buildVolumeY}×{printer.buildVolumeZ} mm</span>
                                                     </div>
                                                     {printer.priceUsd && (
@@ -226,18 +290,19 @@ export function PrinterSelectionModal({ isOpen, onClose }: { isOpen: boolean, on
                                     onClick={handleBack}
                                     className="p-2 hover:bg-white/5 rounded-full text-zinc-500 hover:text-white transition-colors"
                                 >
-                                    <ArrowLeft className="size-5" />
+                                    <ArrowLeft className="size-5"/>
                                 </button>
                                 <div>
                                     <h2 className="text-2xl font-bold font-rajdhani uppercase tracking-tight text-white">Configure
                                         Printer</h2>
-                                    <p className="text-xs text-zinc-500 font-mono mt-1">Set a custom name and IP address
+                                    <p className="text-xs text-zinc-500 font-mono mt-1">Set a custom name and
+                                        hostname/IP
                                         for this printer.</p>
                                 </div>
                             </div>
                             <button onClick={onClose}
-                                className="p-2 hover:bg-white/5 rounded-full text-zinc-500 hover:text-white transition-colors">
-                                <X className="size-5" />
+                                    className="p-2 hover:bg-white/5 rounded-full text-zinc-500 hover:text-white transition-colors">
+                                <X className="size-5"/>
                             </button>
                         </div>
 
@@ -258,7 +323,7 @@ export function PrinterSelectionModal({ isOpen, onClose }: { isOpen: boolean, on
                                                 className="object-contain p-2"
                                             />
                                         ) : (
-                                            <Cpu className="size-8 text-zinc-700" />
+                                            <Cpu className="size-8 text-zinc-700"/>
                                         )}
                                     </div>
                                     <div>
@@ -294,17 +359,17 @@ export function PrinterSelectionModal({ isOpen, onClose }: { isOpen: boolean, on
 
                                     <div>
                                         <label className="block text-sm font-mono text-zinc-400 mb-2">
-                                            IP Address <span className="text-neon-red">*</span>
+                                            Hostname or IP Address <span className="text-neon-red">*</span>
                                         </label>
                                         <input
                                             type="text"
                                             value={ipAddress}
                                             onChange={(e) => setIpAddress(e.target.value)}
-                                            placeholder="e.g., 192.168.1.100"
+                                            placeholder="e.g., 192.168.1.100 or my-printer.local"
                                             className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-sm font-mono focus:ring-1 focus:ring-neon-cyan/20 outline-none transition-all"
                                         />
                                         <p className="text-xs text-zinc-600 font-mono mt-1">
-                                            The local network IP address of your printer
+                                            The local network IP address or hostname of your printer
                                         </p>
                                     </div>
 
@@ -323,6 +388,23 @@ export function PrinterSelectionModal({ isOpen, onClose }: { isOpen: boolean, on
                                         </select>
                                         <p className="text-xs text-zinc-600 font-mono mt-1">
                                             Select the communication protocol manually if detection fails
+                                        </p>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-mono text-zinc-400 mb-2">
+                                            Eject G-code
+                                        </label>
+                                        <textarea
+                                            value={ejectGcode}
+                                            onChange={(e) => setEjectGcode(e.target.value)}
+                                            placeholder="Enter G-code to run after print..."
+                                            className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-sm font-mono focus:ring-1 focus:ring-neon-cyan/20 outline-none transition-all text-white min-h-[100px]"
+                                        />
+                                        <p className="text-xs text-zinc-600 font-mono mt-1">
+                                            G-code to inject at the end of every print job. Default is a &quot;Ramming
+                                            Script&quot; that waits for cooldown, moves behind the part, lowers, and
+                                            pushes it off.
                                         </p>
                                     </div>
                                 </div>
@@ -345,7 +427,7 @@ export function PrinterSelectionModal({ isOpen, onClose }: { isOpen: boolean, on
                                 {adding ? (
                                     <>
                                         <div
-                                            className="size-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
+                                            className="size-4 border-2 border-black/20 border-t-black rounded-full animate-spin"/>
                                         Adding...
                                     </>
                                 ) : (

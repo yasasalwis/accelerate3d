@@ -1,14 +1,23 @@
 import { db } from "@/lib/db"
 import PrintersClient from "@/components/printers/printers-client"
 import { PrinterStatus } from "@/components/ui/printer-card"
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
-// Constant for dev mode
-const MOCK_USER_ID = "dev-user-001"
+interface SessionUser {
+    id: string;
+    name?: string | null;
+    email?: string | null;
+}
 
 export default async function PrintersPage() {
+    const session = await getServerSession(authOptions)
+    if (!session?.user) redirect("/login")
+
     // Fetch printers assigned to the user
     const userPrinters = await db.userPrinter.findMany({
-        where: { userId: MOCK_USER_ID },
+        where: { userId: (session.user as SessionUser).id },
         include: {
             printer: true,
             jobs: {
@@ -48,9 +57,7 @@ export default async function PrintersPage() {
             file: activeJob?.model.name || undefined,
             imageUrl: up.printer.imageUrl || undefined,
             ipAddress: up.ipAddress,
-            // @ts-ignore - Prisma types update lag
             protocol: up.protocol,
-            // @ts-ignore
             lastSeen: up.lastSeen
         }
     })

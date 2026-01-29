@@ -1,18 +1,21 @@
 "use client"
 
-import Link from "next/link"
-import {usePathname} from "next/navigation"
+import {signOut, useSession} from "next-auth/react"
 import {
     BarChart3,
     FileBox,
+    Layers,
     LayoutDashboard,
     ListOrdered,
+    LogOut,
     PanelLeftClose,
     PanelLeftOpen,
     Printer,
     Settings,
     User
 } from "lucide-react"
+import Link from "next/link"
+import {usePathname} from "next/navigation"
 import {cn} from "@/lib/utils"
 import {useState} from "react"
 
@@ -20,6 +23,7 @@ const sidebarItems = [
     {name: "Dashboard", href: "/", icon: LayoutDashboard},
     {name: "Printers", href: "/printers", icon: Printer},
     {name: "3D Models", href: "/models", icon: FileBox},
+    {name: "Slice", href: "/slice", icon: Layers},
     {name: "Queue", href: "/queue", icon: ListOrdered},
     {name: "Analytics", href: "/stats", icon: BarChart3},
     {name: "Admin", href: "/admin", icon: Settings},
@@ -28,6 +32,7 @@ const sidebarItems = [
 export function Sidebar() {
     const pathname = usePathname()
     const [isCollapsed, setIsCollapsed] = useState(false)
+    const {data: session} = useSession()
 
     return (
         <div className={cn(
@@ -92,9 +97,9 @@ export function Sidebar() {
             </nav>
 
             {/* Footer / User */}
-            <div className="p-3 border-t border-white/5 bg-black/20">
-                <button className={cn(
-                    "flex items-center gap-3 w-full p-2 rounded-lg hover:bg-white/5 transition-colors text-left border border-transparent hover:border-white/10 cursor-pointer",
+            <div className="p-3 border-t border-white/5 bg-black/20 space-y-2">
+                <div className={cn(
+                    "flex items-center gap-3 w-full p-2 rounded-lg transition-colors text-left border border-transparent",
                     isCollapsed && "justify-center"
                 )}>
                     <div
@@ -103,10 +108,21 @@ export function Sidebar() {
                     </div>
                     {!isCollapsed && (
                         <div className="flex flex-col overflow-hidden">
-                            <span className="text-sm font-medium truncate text-zinc-200">Admin User</span>
-                            <span className="text-xs text-zinc-500 truncate">admin@accelerate3d.com</span>
+                            <span
+                                className="text-sm font-medium truncate text-zinc-200">{session?.user?.name || "User"}</span>
+                            <span className="text-xs text-zinc-500 truncate">{session?.user?.email || "No email"}</span>
                         </div>
                     )}
+                </div>
+
+                <button
+                    onClick={() => signOut()}
+                    className={cn(
+                        "flex items-center gap-3 w-full p-2 rounded-lg hover:bg-neon-red/10 hover:text-neon-red transition-colors text-left border border-transparent hover:border-neon-red/20 cursor-pointer text-zinc-400",
+                        isCollapsed && "justify-center"
+                    )}>
+                    <LogOut className="size-4"/>
+                    {!isCollapsed && <span className="text-sm font-medium">Log Out</span>}
                 </button>
             </div>
 

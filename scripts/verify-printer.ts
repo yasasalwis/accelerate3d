@@ -1,8 +1,7 @@
-
-import { detectPrinterProtocol } from "../lib/printer-network"
+import {detectPrinterProtocol} from "@/lib/printer-network"
 
 // Mock fetch
-global.fetch = async (url: RequestInfo | URL, init?: RequestInit) => {
+global.fetch = async (url: RequestInfo | URL, _init?: RequestInit) => {
     const sUrl = url.toString()
     console.log(`[MockFetch] ${sUrl}`)
 
@@ -10,7 +9,7 @@ global.fetch = async (url: RequestInfo | URL, init?: RequestInit) => {
     if (sUrl.includes("192.168.1.100") && sUrl.includes(":7125")) {
         return {
             ok: true,
-            json: async () => ({ result: "Moonraker Mock" })
+            json: async () => ({result: "Moonraker Mock"})
         } as Response
     }
 
@@ -18,7 +17,7 @@ global.fetch = async (url: RequestInfo | URL, init?: RequestInit) => {
     if (sUrl.includes("myprinter.local") && sUrl.includes(":8080")) {
         return {
             ok: true,
-            json: async () => ({ result: "Moonraker Mock Custom Port" })
+            json: async () => ({result: "Moonraker Mock Custom Port"})
         } as Response
     }
 
@@ -26,7 +25,7 @@ global.fetch = async (url: RequestInfo | URL, init?: RequestInit) => {
     if (sUrl.startsWith("http://custom-url.com") && sUrl.includes("/printer/info")) {
         return {
             ok: true,
-            json: async () => ({ result: "Moonraker Mock HTTP" })
+            json: async () => ({result: "Moonraker Mock HTTP"})
         } as Response
     }
 

@@ -1,4 +1,3 @@
-
 import mqtt from "mqtt"
 
 type PrinterProtocol = "MOONRAKER" | "MQTT" | "UNKNOWN"
@@ -58,7 +57,7 @@ export async function detectPrinterProtocol(input: string): Promise<PrinterProto
                     console.log(`Detected Moonraker on ${targetUrl}`)
                     return "MOONRAKER"
                 }
-            } catch (e) {
+            } catch (_e) {
                 // Ignore
             }
         }
@@ -70,7 +69,7 @@ export async function detectPrinterProtocol(input: string): Promise<PrinterProto
             const targetHost = protocol?.startsWith('mqtt') ? input : `mqtt://${host}${port ? ':' + port : ''}`
             const isMqtt = await checkMqtt(targetHost)
             if (isMqtt) return "MQTT"
-        } catch (e) {
+        } catch (_e) {
             // Ignore
         }
     }
@@ -130,9 +129,115 @@ export async function getPrinterStatus(input: string, protocol: string): Promise
     if (protocol === "MOONRAKER") {
         return getMoonrakerStatus(input)
     } else if (protocol === "MQTT") {
-        return { status: "ONLINE (MQTT)" } // Todo detailed mqtt status
+        return getMqttStatus(input)
     }
     return { status: "OFFLINE" }
+}
+
+async function getMqttStatus(input: string): Promise<PrinterStatus> {
+    const { host, port } = parseConnectionInput(input)
+    const brokerUrl = `mqtt://${host}${port ? ':' + port : ''}`
+
+    return new Promise((resolve) => {
+        const client = mqtt.connect(brokerUrl, {
+            connectTimeout: 3000,
+            reconnectPeriod: 0
+        })
+
+        let resolved = false
+        const finish = (status: PrinterStatus) => {
+            if (resolved) return
+            resolved = true
+            client.end()
+            resolve(status)
+        }
+
+        // Timeout after 5 seconds
+        const timeout = setTimeout(() => {
+            finish({ status: "OFFLINE" })
+        }, 5000)
+
+        client.on("connect", () => {
+            // Subscribe to common 3D printer MQTT topics
+            // BambuLab printers use: device/{serial}/report
+            // Generic printers may use various topic structures
+            client.subscribe([
+                "device/+/report",      // BambuLab
+                "+/status",             // Generic
+                "+/telemetry",          // Generic
+                "printer/+/status",     // Common pattern
+            ], (err) => {
+                if (err) {
+                    clearTimeout(timeout)
+                    finish({ status: "ONLINE" })
+                }
+            })
+        })
+
+        client.on("message", (_topic, message) => {
+            clearTimeout(timeout)
+            try {
+                const data = JSON.parse(message.toString())
+                const status = parseMqttPrinterData(data)
+                finish(status)
+            } catch {
+                // If message isn't JSON, just confirm online
+                finish({ status: "ONLINE" })
+            }
+        })
+
+        client.on("error", () => {
+            clearTimeout(timeout)
+            finish({ status: "OFFLINE" })
+        })
+    })
+}
+
+function parseMqttPrinterData(data: Record<string, unknown>): PrinterStatus {
+    // BambuLab printer data structure
+    if (data.print && typeof data.print === 'object') {
+        const print = data.print as Record<string, unknown>
+        let status = "IDLE"
+
+        // BambuLab uses gcode_state: IDLE, RUNNING, PAUSE, FINISH, FAILED
+        const gcodeState = print.gcode_state as string
+        if (gcodeState === 'RUNNING') status = "PRINTING"
+        else if (gcodeState === 'PAUSE') status = "PAUSED"
+        else if (gcodeState === 'FAILED') status = "ERROR"
+        else if (gcodeState === 'FINISH') status = "IDLE"
+
+        return {
+            status,
+            nozzleTemp: typeof print.nozzle_temper === 'number' ? print.nozzle_temper : undefined,
+            bedTemp: typeof print.bed_temper === 'number' ? print.bed_temper : undefined,
+            progress: typeof print.mc_percent === 'number' ? print.mc_percent : undefined,
+            filename: typeof print.gcode_file === 'string' ? print.gcode_file : undefined
+        }
+    }
+
+    // Generic MQTT printer data - try common field names
+    let status = "ONLINE"
+    const state = (data.state || data.status || data.printer_state) as string | undefined
+
+    if (state) {
+        const stateLower = state.toLowerCase()
+        if (stateLower.includes('print') || stateLower === 'running') status = "PRINTING"
+        else if (stateLower.includes('pause')) status = "PAUSED"
+        else if (stateLower.includes('error') || stateLower.includes('fail')) status = "ERROR"
+        else if (stateLower.includes('idle') || stateLower.includes('ready')) status = "IDLE"
+    }
+
+    return {
+        status,
+        nozzleTemp: typeof data.nozzle_temp === 'number' ? data.nozzle_temp :
+            typeof data.hotend_temp === 'number' ? data.hotend_temp : undefined,
+        bedTemp: typeof data.bed_temp === 'number' ? data.bed_temp :
+            typeof data.heated_bed === 'number' ? data.heated_bed : undefined,
+        progress: typeof data.progress === 'number' ? data.progress :
+            typeof data.print_progress === 'number' ? data.print_progress : undefined,
+        filename: typeof data.filename === 'string' ? data.filename :
+            typeof data.current_file === 'string' ? data.current_file : undefined
+    }
 }
 
 async function getMoonrakerStatus(input: string): Promise<PrinterStatus> {
@@ -146,7 +251,7 @@ async function getMoonrakerStatus(input: string): Promise<PrinterStatus> {
         // If the User provided `http://myprinter:1234`, we use it.
         // If User provided `192.168.1.1`, we try 7125 then 80 (same strategy as detection)
 
-        let targetUrl = ""
+        let targetUrl: string
 
         if (port || protocol?.startsWith('http')) {
             // User provided specific entry point

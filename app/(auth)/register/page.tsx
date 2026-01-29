@@ -29,7 +29,7 @@ export default function RegisterPage() {
                 const data = await res.json();
                 setError(data.error || "Failed to register");
             }
-        } catch (err) {
+        } catch (_err) {
             setError("An unexpected error occurred");
         } finally {
             setLoading(false);

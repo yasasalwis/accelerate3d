@@ -1,6 +1,5 @@
 import mqtt from 'mqtt';
 import fs from 'fs';
-import path from 'path';
 
 export type PrinterStatus = {
     state: 'IDLE' | 'PRINTING' | 'PAUSED' | 'ERROR' | 'OFFLINE';
@@ -13,6 +12,7 @@ export type PrinterStatus = {
 
 export interface PrinterClient {
     uploadAndPrint(filePath: string, filename: string): Promise<void>;
+
     getStatus(): Promise<PrinterStatus>;
 }
 
@@ -30,7 +30,7 @@ export class MoonrakerClient implements PrinterClient {
     async getStatus(): Promise<PrinterStatus> {
         try {
             // Check Moonraker 'objects/query' for printer state
-            const res = await fetch(`${this.baseUrl}/printer/objects/query?print_stats&extruder&heater_bed`, { signal: AbortSignal.timeout(3000) });
+            const res = await fetch(`${this.baseUrl}/printer/objects/query?print_stats&extruder&heater_bed`, {signal: AbortSignal.timeout(5000)});
             if (!res.ok) throw new Error(`Moonraker check failed: ${res.status}`);
             const data = await res.json();
 
@@ -59,9 +59,15 @@ export class MoonrakerClient implements PrinterClient {
                 printDuration: stats.print_duration,
                 totalDuration: stats.total_duration
             };
-        } catch (e) {
-            console.error(`Moonraker status check failed for ${this.ip}`, e);
-            return { state: 'OFFLINE' };
+        } catch (e: unknown) {
+            const error = e as Error & { name?: string };
+            // Silence timeout errors to avoid log spam
+            if (error.name === 'TimeoutError' || error.name === 'AbortError') {
+                // console.warn(`Moonraker check timed out for ${this.ip}`);
+            } else {
+                console.error(`Moonraker status check failed for ${this.ip}`, error.message);
+            }
+            return {state: 'OFFLINE'};
         }
     }
 
@@ -101,7 +107,7 @@ export class MqttPrinterClient implements PrinterClient {
 
     async getStatus(): Promise<PrinterStatus> {
         return new Promise((resolve) => {
-            const client = mqtt.connect(`mqtt://${this.ip}`, { connectTimeout: 2000 });
+            const client = mqtt.connect(`mqtt://${this.ip}`, {connectTimeout: 5000});
             let resolved = false;
 
             const finish = (status: PrinterStatus) => {
@@ -113,24 +119,24 @@ export class MqttPrinterClient implements PrinterClient {
 
             client.on('connect', () => {
                 // Connected to broker, assume Online but unknown state for generic MQTT
-                finish({ state: 'IDLE', temps: { bed: 0, nozzle: 0 }, printDuration: 0, totalDuration: 0 });
+                finish({state: 'IDLE', temps: {bed: 0, nozzle: 0}, printDuration: 0, totalDuration: 0});
             });
 
             client.on('error', () => {
-                finish({ state: 'OFFLINE' });
+                finish({state: 'OFFLINE'});
             });
 
             client.on('offline', () => {
-                finish({ state: 'OFFLINE' });
+                finish({state: 'OFFLINE'});
             });
 
             setTimeout(() => {
-                finish({ state: 'OFFLINE' });
-            }, 2500);
+                finish({state: 'OFFLINE'});
+            }, 5000);
         });
     }
 
-    async uploadAndPrint(filePath: string, filename: string): Promise<void> {
+    async uploadAndPrint(_filePath: string, _filename: string): Promise<void> {
         throw new Error("G-code upload via MQTT is not supported. Please ensure Moonraker HTTP API is accessible.");
     }
 }
@@ -140,13 +146,15 @@ export async function detectPrinterProtocol(ip: string): Promise<'MOONRAKER' | '
         const client = new MoonrakerClient(ip);
         const status = await client.getStatus();
         if (status.state !== 'OFFLINE') return 'MOONRAKER';
-    } catch { }
+    } catch {
+    }
 
     try {
         const client = new MqttPrinterClient(ip);
         const status = await client.getStatus();
         if (status.state !== 'OFFLINE') return 'MQTT';
-    } catch { }
+    } catch {
+    }
 
     return null;
 }

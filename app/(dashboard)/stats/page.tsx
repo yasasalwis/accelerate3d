@@ -2,11 +2,30 @@ import {db} from "@/lib/db"
 import AnalyticsClient from "@/components/stats/analytics-client"
 import {addDays, format, subDays} from "date-fns"
 
+import {getServerSession} from "next-auth";
+import {authOptions} from "@/lib/auth";
+import {redirect} from "next/navigation";
+
+interface SessionUser {
+    id: string;
+    name?: string | null;
+    email?: string | null;
+}
+
 export default async function StatsPage() {
+    const session = await getServerSession(authOptions)
+    if (!session?.user) redirect("/login")
+    const userId = (session.user as SessionUser).id
+
     // 1. Fetch Print Jobs
     const allJobs = await db.printJob.findMany({
-        include: {model: true},
-        orderBy: {endTime: 'asc'}
+        where: {
+            userPrinter: {
+                userId: userId
+            }
+        },
+        include: { model: true },
+        orderBy: { endTime: 'asc' }
     })
 
     const completedJobs = allJobs.filter(job => job.status === 'COMPLETED')
@@ -16,10 +35,13 @@ export default async function StatsPage() {
     // 2. Fetch Active Nodes (Printers)
     const activeNodesCount = await db.userPrinter.count({
         where: {
-            status: {not: 'OFFLINE'}
+            userId: userId,
+            status: { not: 'OFFLINE' }
         }
     })
-    const totalNodesCount = await db.userPrinter.count()
+    const totalNodesCount = await db.userPrinter.count({
+        where: { userId: userId }
+    })
 
     // 3. Fetch Material Stats
     const materialStats = await db.materialStats.findMany()
@@ -69,9 +91,9 @@ export default async function StatsPage() {
     completedJobs.forEach(job => {
         if (!job.endTime) return
         const dateKey = format(job.endTime, 'MMM dd')
-        const existing = dailyUsage.get(dateKey) || {grams: 0, seconds: 0}
+        const existing = dailyUsage.get(dateKey) || { grams: 0, seconds: 0 }
 
-        let seconds = 0
+        let seconds: number
         if (job.startTime) {
             seconds = (job.endTime.getTime() - job.startTime.getTime()) / 1000
         } else {
@@ -92,7 +114,7 @@ export default async function StatsPage() {
     for (let i = 6; i >= 0; i--) {
         const d = subDays(today, i)
         const key = format(d, 'MMM dd')
-        const data = dailyUsage.get(key) || {grams: 0, seconds: 0}
+        const data = dailyUsage.get(key) || { grams: 0, seconds: 0 }
         chartData.push({
             date: key,
             grams: data.grams,

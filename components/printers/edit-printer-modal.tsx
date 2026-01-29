@@ -11,6 +11,7 @@ interface EditPrinterModalProps {
         id: string
         name: string
         ipAddress: string
+        ejectGcode?: string | null
     } | null
 }
 
@@ -18,11 +19,44 @@ export function EditPrinterModal({isOpen, onClose, printer}: EditPrinterModalPro
     const [isLoading, setIsLoading] = useState(false)
     const [name, setName] = useState("")
     const [ipAddress, setIpAddress] = useState("")
+    const [ejectGcode, setEjectGcode] = useState("")
 
     useEffect(() => {
         if (printer) {
             setName(printer.name)
             setIpAddress(printer.ipAddress)
+            setEjectGcode(printer.ejectGcode || `; --- START OF PART REMOVAL SCRIPT ---
+M104 S0 ; Turn off extruder heater immediately
+M140 S0 ; Turn off bed heater
+
+; 1. PREVENT MOTOR TIMEOUT
+M84 S0  ; Disable motor idle timeout (Motors stay ON and locked)
+
+; 2. WAIT FOR COOL DOWN
+M190 R30 ; Wait for bed to cool down to 30C (Change 30 to your desired release temp)
+
+; 3. PREPARE FOR RAMMING
+G90 ; Absolute positioning
+G28 X Y ; Home X and Y to ensure we know exactly where we are
+G1 Z10 F3000 ; Lift Z to 10mm to avoid scraping while moving into position
+
+; 4. POSITION BEHIND THE PART
+; Change X110 to the center of your bed (e.g., 110 for Ender 3, 125 for Prusa)
+; Change Y220 to the max Y of your bed (The very back)
+G1 X110 Y220 F3000 
+
+; 5. LOWER THE BOOM
+; CAUTION: Ensure this height hits the part but DOES NOT hit the bed clips or surface
+G1 Z2 F3000 ; Lower nozzle to 2mm above the bed
+
+; 6. THE PUSH
+; Move nozzle to the front (Y0), sweeping the part off the plate
+G1 Y0 F1000 ; Move Y slowly (F1000) to push the part
+
+; 7. FINISH
+G1 Z50 ; Lift head out of the way
+M84 ; Finally turn off motors (optional, remove if you want them to stay locked)
+; --- END OF SCRIPT ---`)
         }
     }, [printer])
 
@@ -33,7 +67,7 @@ export function EditPrinterModal({isOpen, onClose, printer}: EditPrinterModalPro
         setIsLoading(true)
 
         try {
-            await updateUserPrinter(printer.id, name, ipAddress)
+            await updateUserPrinter(printer.id, name, ipAddress, ejectGcode)
             onClose()
         } catch (error) {
             console.error("Failed to update printer:", error)
@@ -77,14 +111,25 @@ export function EditPrinterModal({isOpen, onClose, printer}: EditPrinterModalPro
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider">IP
+                            <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Hostname or IP
                                 Address</label>
                             <input
                                 required
                                 value={ipAddress}
                                 onChange={(e) => setIpAddress(e.target.value)}
                                 className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-neon-purple/50 focus:ring-1 focus:ring-neon-purple/50 transition-all font-mono"
-                                placeholder="e.g. 192.168.1.100"
+                                placeholder="e.g. 192.168.1.100 or my-printer.local"
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Eject
+                                G-code</label>
+                            <textarea
+                                value={ejectGcode}
+                                onChange={(e) => setEjectGcode(e.target.value)}
+                                className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-neon-purple/50 focus:ring-1 focus:ring-neon-purple/50 transition-all font-mono min-h-[100px]"
+                                placeholder="Enter G-code to run after print..."
                             />
                         </div>
 

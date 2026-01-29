@@ -29,7 +29,7 @@ model Notification {
 model UserPrinter {
   id                 String     @id @default(uuid())
   name               String
-  ipAddress          String     @unique
+  ipAddress          String
   apiKey             String?
   status             String     @default("IDLE")
   type               String     @default("FDM")
@@ -37,6 +37,8 @@ model UserPrinter {
   currentJobId       String?
   protocol           String     @default("UNKNOWN")
   lastSeen           DateTime?
+  webcamUrl          String?
+  ejectGcode         String?
   createdAt          DateTime   @default(now())
   updatedAt          DateTime   @updatedAt
   printerId          String
@@ -44,6 +46,8 @@ model UserPrinter {
   jobs               PrintJob[]
   user               User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   printer            Printer    @relation(fields: [printerId], references: [id])
+
+  @@unique([userId, ipAddress])
 }
 
 model Manufacturer {

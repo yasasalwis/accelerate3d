@@ -1,31 +1,39 @@
 "use server"
 
-import { db } from "./db"
-import { revalidatePath } from "next/cache"
-import { detectPrinterProtocol } from "./printer-network"
+import {db} from "./db"
+import {revalidatePath} from "next/cache"
+import {detectPrinterProtocol, getPrinterStatus} from "./printer-network"
 
-// Mock User ID for development until Auth is implemented
-const MOCK_USER_ID = "dev-user-001"
+import {getServerSession} from "next-auth"
+import {authOptions} from "./auth"
 
-async function ensureDevUser() {
-    const user = await db.user.upsert({
-        where: { id: MOCK_USER_ID },
-        update: {},
-        create: {
-            id: MOCK_USER_ID,
-            username: "admin",
-            passwordHash: "mock",
-        }
-    })
+interface SessionUser {
+    id: string;
+    name?: string | null;
+    email?: string | null;
+}
+
+async function getAuthenticatedUser(): Promise<string> {
+    const session = await getServerSession(authOptions)
+    const user = session?.user as SessionUser | undefined
+    if (!user?.id) {
+        throw new Error("Unauthorized")
+    }
     return user.id
 }
 
-export async function addPrinterToUser(printerId: string, name: string, ipAddress: string, protocol: string = "AUTO") {
-    const userId = await ensureDevUser()
+export async function addPrinterToUser(printerId: string, name: string, ipAddress: string, protocol: string = "AUTO", ejectGcode: string = "") {
+    const userId = await getAuthenticatedUser()
 
     let detectedProtocol = protocol
     if (protocol === "AUTO") {
         detectedProtocol = await detectPrinterProtocol(ipAddress)
+    }
+
+    let initialStatus = "OFFLINE"
+    if (detectedProtocol !== "UNKNOWN") {
+        const statusData = await getPrinterStatus(ipAddress, detectedProtocol)
+        initialStatus = statusData.status || "IDLE"
     }
 
     await db.userPrinter.create({
@@ -34,10 +42,11 @@ export async function addPrinterToUser(printerId: string, name: string, ipAddres
             printerId,
             name,
             ipAddress,
-            // @ts-ignore
             protocol: detectedProtocol,
-            // @ts-ignore
-            lastSeen: detectedProtocol !== "UNKNOWN" ? new Date() : null
+            status: initialStatus,
+            lastSeen: detectedProtocol !== "UNKNOWN" ? new Date() : null,
+            webcamUrl: detectedProtocol === "MOONRAKER" ? `http://${ipAddress}/webcam/?action=stream` : null,
+            ejectGcode: ejectGcode || null
         }
     })
 
@@ -46,24 +55,29 @@ export async function addPrinterToUser(printerId: string, name: string, ipAddres
 }
 
 export async function removePrinterFromUser(userPrinterId: string) {
-    await ensureDevUser()
+    const userId = await getAuthenticatedUser()
 
-    await db.userPrinter.delete({
+    const result = await db.userPrinter.deleteMany({
         where: {
-            id: userPrinterId
+            id: userPrinterId,
+            userId
         }
     })
+
+    if (result.count === 0) {
+        throw new Error("Printer not found or access denied")
+    }
 
     revalidatePath("/printers")
     revalidatePath("/")
 }
 
-export async function updateUserPrinter(userPrinterId: string, name: string, ipAddress: string) {
-    const userId = await ensureDevUser()
+export async function updateUserPrinter(userPrinterId: string, name: string, ipAddress: string, ejectGcode: string = "") {
+    const userId = await getAuthenticatedUser()
 
     // Verify ownership
     const existing = await db.userPrinter.findFirst({
-        where: { id: userPrinterId, userId }
+        where: {id: userPrinterId, userId}
     })
 
     if (!existing) {
@@ -71,9 +85,7 @@ export async function updateUserPrinter(userPrinterId: string, name: string, ipA
     }
 
     // If IP changed, re-detect protocol
-    // @ts-ignore
     let protocol = existing.protocol
-    // @ts-ignore
     let lastSeen = existing.lastSeen
     if (ipAddress !== existing.ipAddress) {
         protocol = await detectPrinterProtocol(ipAddress)
@@ -81,20 +93,15 @@ export async function updateUserPrinter(userPrinterId: string, name: string, ipA
     }
 
     await db.userPrinter.update({
-        where: { id: userPrinterId },
-        // @ts-ignore
-        data: { name, ipAddress, protocol, lastSeen }
+        where: {id: userPrinterId},
+        data: {name, ipAddress, protocol, lastSeen, ejectGcode: ejectGcode || null}
     })
 
     revalidatePath("/printers")
 }
 
 export async function getAvailablePrinters() {
-    await ensureDevUser() // Just ensuring dev user exists, assuming side effect needed? The variable was unused.
-    // Actually, ensureDevUser() creates the user if not exists. It might be needed?
-    // The original code was: `const userId = await ensureDevUser()`.
-    // Since only userId variable is unused, I should keep the call if it has important side effects (like seeding the db).
-    // Yes, it has upsert.
+    await getAuthenticatedUser()
     return db.printer.findMany({
         include: {
             manufacturer: true,
@@ -109,16 +116,16 @@ export async function getAvailablePrinters() {
 }
 
 export async function schedulePrint(modelId: string, quantity: number) {
-    const userId = await ensureDevUser()
-    const model = await db.model.findUnique({ where: { id: modelId } })
+    const userId = await getAuthenticatedUser()
+    const model = await db.model.findUnique({where: {id: modelId}})
     if (!model) throw new Error("Model not found")
 
     // 1. Get user printers
     const userPrinters = await db.userPrinter.findMany({
-        where: { userId },
+        where: {userId},
         include: {
             printer: true,
-            jobs: { where: { status: "PENDING" } }
+            jobs: {where: {status: "PENDING"}}
         }
     })
 
@@ -154,9 +161,23 @@ export async function schedulePrint(modelId: string, quantity: number) {
 }
 
 export async function removePrintJob(printJobId: string) {
-    await ensureDevUser()
+    const userId = await getAuthenticatedUser()
+
+    const job = await db.printJob.findUnique({
+        where: {id: printJobId},
+        include: {userPrinter: true}
+    })
+
+    if (!job) {
+        throw new Error("Job not found")
+    }
+
+    if (job.userPrinter.userId !== userId) {
+        throw new Error("Unauthorized")
+    }
+
     await db.printJob.delete({
-        where: { id: printJobId }
+        where: {id: printJobId}
     })
     revalidatePath("/queue")
 }

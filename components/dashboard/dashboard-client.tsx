@@ -25,6 +25,7 @@ export interface PrinterData {
     temps?: { nozzle: number; bed: number }
     file?: string
     ipAddress: string
+    webcamUrl?: string | null
 }
 
 export interface FleetData {
@@ -234,6 +235,7 @@ export default function DashboardClient({printers, stats, fleetData, activePerce
                             temps={printer.temps}
                             file={printer.file}
                             ipAddress={printer.ipAddress}
+                            webcamUrl={printer.webcamUrl}
                             onEdit={handleEdit}
                             onRemove={handleRemove}
                         />
